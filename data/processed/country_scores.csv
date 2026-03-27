@@ -1,0 +1,6 @@
+country,iso3,region,composite_baseline_2024,composite_baseline_2030,composite_baseline_2050,composite_rcp45_2024,composite_rcp45_2030,composite_rcp45_2050,composite_rcp85_2024,composite_rcp85_2030,composite_rcp85_2050
+Mexico,MEX,Central America,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5
+Brazil,BRA,South America,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5
+Colombia,COL,Andean,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5
+Haiti,HTI,Caribbean SIDS,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5
+Jamaica,JAM,Caribbean SIDS,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5

@@ -1,0 +1,21 @@
+project:
+  type: default
+
+execute:
+  echo: false
+  warning: false
+  message: false
+  cache: false
+
+format:
+  html:
+    theme: [flatly, "report/styles.css"]
+    toc: true
+    toc-depth: 3
+    toc-title: "Contents"
+    number-sections: true
+    embed-resources: true
+    smooth-scroll: true
+    anchor-sections: true
+    code-fold: true
+    df-print: paged
