@@ -80,12 +80,144 @@ sensitivity_test <- function(df, base_weights = NULL, n_perturb = 100) {
 }
 
 # ============================================================
-# MODULE STUBS (filled in plans 03-02 through 03-07)
+# MODULE 2: EXPOSURE SCORING (EXP-01)
 # ============================================================
 
-score_exposure     <- function(lac) { message("score_exposure: stub"); lac }
-score_vulnerability <- function(lac) { message("score_vulnerability: stub"); lac }
-score_ews          <- function(lac) { message("score_ews: stub"); lac }
+#' Compute exposure index per country
+#'
+#' Weighted arithmetic mean of three normalised exposure components.
+#' Exposure is additive (not multiplicative) — a country can have high
+#' exposure from population OR GDP, unlike hazard which requires co-occurrence.
+#'
+#' @param lac Data frame from lac_master.csv
+#' @return lac with exposure_score column added (numeric [0,1])
+score_exposure <- function(lac) {
+  # Component 1: GDP exposure (larger economy = higher absolute exposure)
+  gdp_norm     <- normalise_to_01(lac$gdp_usd, method = "minmax")
+
+  # Component 2: Population exposure
+  pop_norm     <- normalise_to_01(lac$pop_total, method = "minmax")
+
+  # Component 3: Infrastructure proxy — loss rate as % GDP
+  # Higher losses_pct_gdp = more exposed infrastructure
+  # Guard against NA with coalesce
+  losses_pct   <- dplyr::coalesce(lac$losses_pct_gdp, 0)
+  infra_norm   <- normalise_to_01(losses_pct, method = "minmax")
+
+  # Weighted arithmetic mean (exposure is additive)
+  lac$exposure_score <- 0.40 * gdp_norm + 0.40 * pop_norm + 0.20 * infra_norm
+
+  message("score_exposure: completed — ",
+          "Brazil=", round(lac$exposure_score[lac$iso3 == "BRA"], 3),
+          " Haiti=", round(lac$exposure_score[lac$iso3 == "HTI"], 3))
+  lac
+}
+
+# ============================================================
+# MODULE 3: VULNERABILITY SCORING (EXP-02)
+# ============================================================
+
+#' Compute vulnerability index per country
+#'
+#' Combines HDI proxy (life expectancy), institutional capacity (WGI), and
+#' INFORM Risk score. Governance indicators are INVERTED: high governance
+#' capacity means lower vulnerability. Life expectancy is also inverted.
+#'
+#' @param lac Data frame from lac_master.csv
+#' @return lac with vulnerability_score column added (numeric [0,1])
+score_vulnerability <- function(lac) {
+  # --- life expectancy: lower = higher vulnerability → invert after normalising ---
+  life_norm   <- normalise_to_01(lac$life_exp, method = "minmax")
+  life_vuln   <- 1 - life_norm  # inversion: low life_exp → high vulnerability
+
+  # --- governance effectiveness: normalise from [-2.5, 2.5] to [0,1] then invert ---
+  gov_clipped <- pmin(pmax(dplyr::coalesce(lac$gov_eff, 0), -2.5), 2.5)
+  gov_norm    <- (gov_clipped + 2.5) / 5.0  # linear map [-2.5,2.5] → [0,1]
+  gov_vuln    <- 1 - gov_norm  # inversion: high governance → low vulnerability
+
+  # --- rule of law: same normalisation and inversion as gov_eff ---
+  rl_clipped  <- pmin(pmax(dplyr::coalesce(lac$rule_of_law, 0), -2.5), 2.5)
+  rl_norm     <- (rl_clipped + 2.5) / 5.0
+  rl_vuln     <- 1 - rl_norm
+
+  # --- INFORM risk score: already directional (higher = more vulnerable) ---
+  inform_norm <- normalise_to_01(lac$inform_risk_score, method = "minmax")
+
+  # Weighted mean: life_exp 30%, gov_eff 30%, rule_of_law 20%, INFORM 20%
+  lac$vulnerability_score <- (0.30 * life_vuln) +
+                             (0.30 * gov_vuln)  +
+                             (0.20 * rl_vuln)   +
+                             (0.20 * inform_norm)
+
+  # Ensure output is strictly in [0,1] (floating point safety)
+  lac$vulnerability_score <- pmin(pmax(lac$vulnerability_score, 0), 1)
+
+  message("score_vulnerability: completed — ",
+          "Haiti=", round(lac$vulnerability_score[lac$iso3 == "HTI"], 3),
+          " Chile=", round(lac$vulnerability_score[lac$iso3 == "CHL"], 3))
+  lac
+}
+
+# ============================================================
+# MODULE 4: EWS READINESS SCORING (EWS-01, EWS-02)
+# ============================================================
+
+#' Compute EWS readiness score and gap tier per country
+#'
+#' Synthetic 4-dimension scoring using governance and INFORM proxies.
+#' Gap tier identifies priority investment targets: countries with high
+#' disaster risk exposure but low early warning system capacity.
+#'
+#' @param lac Data frame from lac_master.csv (after score_hazard() optionally run)
+#' @return lac with ews_readiness_score [0,1] and ews_gap_tier character columns
+score_ews <- function(lac) {
+  # --- Normalise inputs ---
+  gov_clipped  <- pmin(pmax(dplyr::coalesce(lac$gov_eff, 0), -2.5), 2.5)
+  gov_norm     <- (gov_clipped + 2.5) / 5.0  # [0,1]; higher = better capacity
+
+  rl_clipped   <- pmin(pmax(dplyr::coalesce(lac$rule_of_law, 0), -2.5), 2.5)
+  rl_norm      <- (rl_clipped + 2.5) / 5.0
+
+  inform_norm  <- normalise_to_01(lac$inform_risk_score, method = "minmax")
+  # INFORM is inverted: lower INFORM risk -> better dissemination capacity
+  inform_cap   <- 1 - inform_norm
+
+  # SIDS reliability penalty: SIDS tend to have lower EWS infrastructure
+  sids_penalty <- ifelse(lac$sids_reliability_flag, 0.10, 0.0)
+
+  # --- 4 EWS dimensions ---
+  # D1: Monitoring capacity (governance proxy)
+  d1_monitoring     <- gov_norm
+
+  # D2: Warning dissemination (INFORM capacity proxy)
+  d2_dissemination  <- inform_cap
+
+  # D3: Community preparedness (governance - SIDS penalty)
+  d3_preparedness   <- pmax(gov_norm - sids_penalty, 0)
+
+  # D4: Institutional coordination (avg of gov_eff + rule_of_law)
+  d4_coordination   <- (gov_norm + rl_norm) / 2
+
+  # Equal-weight average of 4 dimensions
+  lac$ews_readiness_score <- (d1_monitoring + d2_dissemination +
+                              d3_preparedness + d4_coordination) / 4
+
+  # --- EWS gap tier: priority investment classification ---
+  # Uses inform_risk_score as demand signal (hazard_composite not guaranteed
+  # available when this module runs in isolation)
+  lac$ews_gap_tier <- dplyr::case_when(
+    lac$inform_risk_score >= 6.5 & lac$ews_readiness_score < 0.35 ~ "Critical",
+    lac$inform_risk_score >= 5.0 & lac$ews_readiness_score < 0.50 ~ "High",
+    lac$inform_risk_score >= 3.5 | lac$ews_readiness_score < 0.60 ~ "Moderate",
+    TRUE                                                            ~ "Low"
+  )
+
+  message("score_ews: completed — ",
+          "Haiti=", lac$ews_gap_tier[lac$iso3 == "HTI"],
+          " Chile=", lac$ews_gap_tier[lac$iso3 == "CHL"])
+  lac
+}
+
 score_nbs          <- function(lac) { message("score_nbs: stub"); lac }
 score_structural   <- function(lac) { message("score_structural: stub"); lac }
 score_recovery     <- function(lac) { message("score_recovery: stub"); lac }
@@ -113,5 +245,11 @@ if (sys.nframe() == 0L) {
   lac <- score_sendai(lac)
   lac <- assemble_outputs(lac)
 
-  message("03_score.R: pipeline complete (stubs active for non-hazard modules)")
+  # Write scores_intermediate.csv — accumulates implemented scoring columns;
+  # stubs leave columns absent (tests for unimplemented modules fail RED as designed)
+  readr::write_csv(lac, here::here("data/processed/scores_intermediate.csv"))
+  message("03_score.R: scores_intermediate.csv written (",
+          nrow(lac), " rows, ", ncol(lac), " columns)")
+
+  message("03_score.R: pipeline complete (stubs active for non-implemented modules)")
 }
