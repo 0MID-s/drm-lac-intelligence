@@ -1,0 +1,131 @@
+---
+title: "DRM Risk Intelligence Report — LAC Region"
+subtitle: "Multi-Hazard Assessment | EWS Readiness | Recovery Readiness | Protection Gap"
+date: today
+date-format: "D MMMM YYYY"
+params:
+  scenario: "baseline"
+  year: 2024
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+library(here)
+library(readr)
+library(dplyr)
+source(here::here("shared/R/utils.R"))
+
+# Load stub data and pass to OJS
+country_scores <- readr::read_csv(
+  here::here("data/processed/country_scores.csv"),
+  show_col_types = FALSE
+)
+ojs_define(country_scores_ojs = country_scores)
+```
+
+# Executive Summary
+
+::: {.callout-note appearance="simple"}
+## Skills Demonstrated
+
+- Multi-hazard composite index construction (HEV framework, INFORM + IBTrACS + ThinkHazard)
+- Bootstrap uncertainty quantification on composite country rankings
+- EWS readiness gap analysis (Sendai Target G dimensions)
+- Nature-based solutions feasibility screening (Global Mangrove Watch, Hansen GFC)
+- Structural risk reduction investment gap estimation (DESINVENTAR Sendai + UN-Habitat)
+- Post-disaster recovery readiness indexing (Swiss Re sigma, IMF fiscal space, WGI)
+- Sendai Framework Targets A–G scorecard
+- Protection gap quantification bridging insurance and DRM frameworks
+- PCA robustness validation of composite methodology
+- Parameterised Quarto report with embedded OJS interactivity (self-contained HTML)
+:::
+
+This report presents a multi-hazard DRM intelligence assessment for [XX] LAC countries using INFORM Risk Index, NOAA IBTrACS cyclone track data, UNDRR DESINVENTAR Sendai loss records, and World Bank WDI indicators. [XX]% of the regional population is exposed to high-composite-risk conditions. The regional protection gap stands at approximately 81%, consistent with Swiss Re sigma estimates for Latin America and the Caribbean. Priority investment targets are identified at the intersection of high multi-hazard exposure, low EWS readiness, and large protection gaps.
+
+## Interactive Country Explorer
+
+```{ojs}
+//| label: ojs-setup
+countries = transpose(country_scores_ojs)
+```
+
+```{ojs}
+//| label: ojs-controls
+//| layout-ncol: 2
+viewof selected_scenario = Inputs.select(
+  new Map([["Baseline (2024–2050)", "baseline"],
+           ["RCP 4.5 — Moderate emissions", "rcp45"],
+           ["RCP 8.5 — High emissions", "rcp85"]]),
+  {label: "Climate Scenario", value: "baseline"}
+)
+viewof selected_year = Inputs.select(
+  ["2024", "2030", "2050"],
+  {label: "Projection Year", value: "2024"}
+)
+```
+
+```{ojs}
+//| label: ojs-table
+col = "composite_" + selected_scenario + "_" + selected_year
+filtered = countries
+  .map(d => ({
+    Country:  d.country,
+    ISO3:     d.iso3,
+    Region:   d.region,
+    "Composite Score": +d[col]
+  }))
+  .sort((a, b) => b["Composite Score"] - a["Composite Score"])
+
+Inputs.table(filtered, {
+  header: {
+    "Composite Score": "Composite Risk Score [0–1]"
+  },
+  format: {
+    "Composite Score": x => x.toFixed(3)
+  }
+})
+```
+
+*Stub data: 5 representative countries with placeholder scores of 0.5. Full 20+ country dataset populated in Phase 2.*
+
+# Methodology and Data Sources
+
+The assessment applies a Hazard–Exposure–Vulnerability (HEV) composite index across five hazard types: tropical cyclone/hurricane wind (NOAA IBTrACS 1980–2023), riverine flood (INFORM Risk Index v2024), seismic (INFORM + ThinkHazard API), volcanic (ThinkHazard API), and drought/ENSO (INFORM Lack of Coping Capacity index). All scores are normalised to [0, 1] using min-max normalisation. Bootstrap resampling (500 draws) of dimension weights produces 90% confidence intervals on country rankings. PCA on the five hazard dimensions validates the composite structure — if PC1 accounts for >60% of variance and correlates ≥0.85 with the composite index, the weighting scheme is considered robust. Historical disaster loss data are sourced from UNDRR DESINVENTAR Sendai (no registration required). Exposure indicators are drawn from World Bank WDI via the `wbstats` R package.
+
+# Multi-Hazard Assessment
+
+This section presents the multi-hazard composite index for 20+ LAC countries. Haiti and Guatemala are expected in the extreme-risk band given overlapping seismic, hurricane, and flood exposure; Dominican Republic, Colombia, and Ecuador in the high-risk band. The Caribbean SIDS sub-cluster faces disproportionate cyclone exposure relative to adaptive capacity. [Choropleth map — Phase 4] [Bootstrap uncertainty chart — Phase 3]
+
+# Exposure and Vulnerability
+
+Exposure is quantified using: GDP exposure (World Bank WDI NY.GDP.MKTP.CD), population in hazard zones (INFORM Exposure Index), infrastructure density proxy (road network km per 1,000 km² from World Bank), and agricultural GDP share (World Bank NV.AGR.TOTL.ZS). Vulnerability is indexed from HDI (UNDP via World Bank), World Governance Indicators institutional capacity composite, and adaptive capacity proxies (health expenditure per capita, literacy rate). The Risk = Hazard × Exposure × Vulnerability matrix surfaces countries where moderate hazard combines with high exposure and low adaptive capacity — often more policy-relevant than raw hazard rank. [Risk matrix scatter — Phase 4]
+
+# Early Warning Systems Readiness
+
+EWS readiness is scored across four Sendai Target G dimensions: (1) monitoring capacity — hydrometeorological station density and seismic network coverage; (2) warning dissemination — cell-broadcast adoption and multi-channel reach; (3) community preparedness — DRR inclusion in national education curricula and community drill frequency; (4) institutional coordination — NMHS mandate and multi-agency protocol documentation. The EWS Readiness Gap Index is the arithmetic difference between the normalised multi-hazard score and the normalised EWS readiness score. Countries with gap > 0.4 are classified as priority EWS investment targets. [Dumbbell chart — Phase 4]
+
+# Nature-based Solutions
+
+NbS feasibility is assessed for flood and coastal hazard using Global Mangrove Watch (JAXA) country-level mangrove area and loss rates, Hansen Global Forest Change tree cover and loss data, and Ramsar wetland extent by country. For drought, green infrastructure and watershed restoration potential is scored using forest cover trend and agricultural water stress indicators (World Bank). Countries where mangrove coverage has declined >15% since 2000 and coastal flood hazard is High+ are flagged as priority NbS investment targets where restoration can substitute structural engineering at lower lifecycle cost. [Treemap — Phase 4]
+
+# Structural Risk Reduction
+
+Structural vulnerability proxies — informal settlement population share (UN-Habitat 2023), seismic building code adoption year, and construction material quality index — are combined with UNDRR DESINVENTAR Sendai historical loss records to estimate a structural risk reduction investment gap per country. The gap is defined as the difference between modelled current risk-adjusted loss and projected loss under improved building standards, anchored to World Bank GFDRR country damage ratios. [Investment gap treemap — Phase 4]
+
+# Recovery Readiness and Protection Gap
+
+The Recovery Readiness Index synthesises: insurance penetration rate (Swiss Re sigma 2023 LAC regional figures), social protection coverage (World Bank ASPIRE database), fiscal space for emergency response (IMF World Economic Outlook primary balance as % GDP), and DRM legal framework maturity (UNDRR Sendai Monitor national strategy indicator). The protection gap — the share of disaster economic losses not covered by insurance or social protection — is estimated at approximately 81% for the LAC region, consistent with Swiss Re sigma 2023. This connects the parametric insurance design methodology from prior work (CCRIF SPC rainfall trigger design) to the development finance DRM framing required for IDB and GFDRR programme design. [Protection gap projection 2024–2050 — Phase 4]
+
+# Sendai Framework Alignment
+
+All analytical outputs are mapped to Sendai Framework for DRR 2015–2030 Targets A–G. Targets A (mortality) and B (affected people) are derived from DESINVENTAR Sendai loss records. Targets C (economic losses) and D (critical infrastructure) use GFDRR damage ratio methodology. Targets E (national DRR strategies), F (local strategies), and G (international cooperation/EWS) are scored as ordinal indicators (Reported / Partial / Not Reported) from UNDRR Sendai Monitor, consistent with official reporting conventions. [Sendai heatmap scorecard — Phase 4]
+
+# Conclusions and Recommendations
+
+[XX] priority investment targets are identified across the LAC region at the intersection of high multi-hazard exposure, low EWS readiness, and large structural and protection gaps. Recommendations are structured against Sendai Framework priorities and IDB Country Development Challenges (CDCs), with explicit linkage to IDB's DRM lending instrument categories: contingent credit, parametric insurance co-financing, and NbS technical assistance. [Priority ranking table — Phase 4]
+
+# Appendix: Methodology and Data Coverage
+
+Full methodology documentation, data source citations, API fetch functions with fallback logic, and known data limitations. Data coverage heatmap: [to be populated in Phase 4]. PCA robustness validation: [Phase 3]. Bootstrap weight sensitivity: [Phase 3]. All R code is parameterised by `params$scenario` and `params$year` — re-render with `quarto render report/drm_intelligence_report.qmd -P scenario:rcp85 -P year:2050` for high-emissions 2050 scenario.

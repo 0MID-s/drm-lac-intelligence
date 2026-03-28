@@ -1,0 +1,18 @@
+/* DRM Intelligence Report — LAC Region */
+/* Custom overrides for Quarto flatly theme */
+
+:root {
+  --drm-primary: #1B4F72;
+  --drm-accent:  #2E86AB;
+  --drm-warn:    #E8A838;
+  --drm-danger:  #C0392B;
+  --drm-bg:      #F8F9FA;
+}
+
+h1, h2, h3      { color: var(--drm-primary); }
+a               { color: var(--drm-accent); }
+.callout        { border-left-color: var(--drm-accent) !important; }
+
+/* OJS table overrides */
+.observablehq table { font-size: 0.88rem; }
+.observablehq table thead th { background: var(--drm-primary); color: #fff; }
