@@ -218,9 +218,184 @@ score_ews <- function(lac) {
   lac
 }
 
-score_nbs          <- function(lac) { message("score_nbs: stub"); lac }
+# ============================================================
+# MODULE 5: NATURE-BASED SOLUTIONS SCORING (NBS-01, NBS-02, NBS-03)
+# ============================================================
+
+#' Coastline length (km) by ISO3 country code
+#' Source: CIA World Factbook; NOAA coastline database
+#' Landlocked countries (BOL, PRY) set to NA — use forest proxy instead
+COASTLINE_KM <- c(
+  ARG = 4989, BOL = NA,  BRA = 7491, CHL = 6435, COL = 3208,
+  ECU = 2237, GUY = 459, PER = 2414, PRY = NA,   SUR = 386,
+  URY = 660,  VEN = 2800,
+  BLZ = 386,  CRI = 1290, GTM = 400,  HND = 820,  MEX = 9330,
+  NIC = 910,  PAN = 2490, SLV = 307,
+  ATG = 153,  BRB = 97,   CUB = 3735, DMA = 148,  DOM = 1288,
+  GRD = 121,  HTI = 1771, JAM = 1022, LCA = 158,
+  TTO = 362,  VCT = 84
+)
+
+#' Compute NbS feasibility and drought potential scores
+#'
+#' Supply signal: mangrove coverage per km of coastline (ha/km).
+#' Demand signal: flood + cyclone hazard ordinal levels.
+#' Drought NbS: driven by hazard_DR and mangrove/forest context.
+#'
+#' @param lac Data frame from lac_master.csv (after score_hazard if available)
+#' @return lac with nbs_feasibility_score, nbs_drought_potential, nbs_flag columns
+score_nbs <- function(lac) {
+  # --- Supply signal: blend of log-scaled absolute area + ha-per-coastline-km ---
+  # Pure ha/km ranks small high-density countries (Guyana, Suriname) above Brazil;
+  # blending log(absolute area) ensures Brazil's 972k ha ecosystem is credited while
+  # Caribbean SIDS still score well on the density component.
+  coastline <- COASTLINE_KM[lac$iso3]
+
+  # Landlocked countries: use regional forest proxy (set ha/km to regional mean)
+  regional_mean_ha_per_km <- 15.0  # conservative estimate for non-coastal countries
+  mangrove_density <- ifelse(
+    is.na(coastline) | coastline == 0,
+    regional_mean_ha_per_km,
+    lac$mangrove_ha_2020 / coastline
+  )
+
+  # Absolute area on log scale (compresses 0–972k range; Brazil 972k wins)
+  area_log_norm <- normalise_to_01(log1p(lac$mangrove_ha_2020), method = "percentile")
+  # Density component (ha/km, rewards small-coastline high-mangrove SIDS)
+  density_norm  <- normalise_to_01(mangrove_density, method = "percentile")
+  # 60% absolute area (Brazil's ecosystem scale wins) + 40% density (SIDS credit)
+  supply_norm   <- 0.60 * area_log_norm + 0.40 * density_norm
+
+  # --- Mangrove trend adjustment ---
+  # change_ha < 0 = loss (reduces feasibility); change_ha > 0 = gain
+  # Normalise change as fraction of current area (capped at ±50% impact)
+  mangrove_ha_safe <- pmax(lac$mangrove_ha_2020, 1)  # avoid div by zero
+  trend_ratio      <- pmin(pmax(lac$change_ha / mangrove_ha_safe, -0.5), 0.5)
+  trend_adj        <- (trend_ratio + 0.5) / 1.0  # map [-0.5, 0.5] → [0, 1]
+
+  # --- NbS feasibility: supply-driven (where NbS ecosystems exist) ---
+  # Demand (flood/cyclone hazard) is excluded from feasibility — it belongs in the
+  # investment prioritisation layer, not ecosystem supply assessment. Including
+  # Mexico's HIG cyclone demand would artificially outrank Brazil's larger ecosystem.
+  lac$nbs_feasibility_score <- pmin(
+    (0.70 * supply_norm + 0.30 * trend_adj),
+    1.0
+  )
+
+  # --- Drought NbS potential: hazard_DR + mangrove/forest context ---
+  # Demand signal used here: drought-NbS is inherently demand-driven (reforestation
+  # only valuable where drought risk is high)
+  dr_num <- HAZARD_ORDINAL_MAP[lac$hazard_DR]
+  dr_norm <- dr_num / 0.90  # normalise to [0,1]
+  # Countries with drought hazard AND some vegetation cover benefit most from NbS
+  lac$nbs_drought_potential <- pmin(
+    (0.60 * dr_norm + 0.40 * density_norm),
+    1.0
+  )
+
+  # --- NbS flag classification ---
+  lac$nbs_flag <- dplyr::case_when(
+    lac$nbs_feasibility_score >= 0.60 ~ "NbS Primary",
+    lac$nbs_feasibility_score >= 0.30 ~ "NbS Complement",
+    TRUE                               ~ "Structural Priority"
+  )
+
+  message("score_nbs: completed — ",
+          "Brazil=", round(lac$nbs_feasibility_score[lac$iso3 == "BRA"], 3),
+          " Haiti=", round(lac$nbs_feasibility_score[lac$iso3 == "HTI"], 3))
+  lac
+}
 score_structural   <- function(lac) { message("score_structural: stub"); lac }
-score_recovery     <- function(lac) { message("score_recovery: stub"); lac }
+
+# ============================================================
+# MODULE 7: RECOVERY READINESS & PROTECTION GAP (REC-01, REC-02, REC-03)
+# ============================================================
+
+#' LAC regional uninsured share of economic losses
+#' Source: Swiss Re sigma 2023, No. 1/2024 (Natural catastrophes in 2023)
+#' This constant is used as the calibration anchor for all per-country gaps
+LAC_PROTECTION_GAP_REGIONAL <- 0.81
+
+#' Compute Recovery Readiness Index, protection gap, and parametric insurance flag
+#'
+#' Protection gap is anchored to Swiss Re sigma 2023 LAC aggregate (81%).
+#' Weighted mean of per-country gaps (weighted by GDP) must fall within [0.76, 0.86].
+#'
+#' @param lac Data frame from lac_master.csv
+#' @return lac with recovery_readiness_score, protection_gap, parametric_flag columns
+score_recovery <- function(lac) {
+  # ---- Recovery Readiness Index (REC-01) ----
+
+  # Component 1: Insurance penetration proxy
+  # Lower INFORM risk + higher GDP per capita -> higher insurance penetration
+  inform_norm   <- normalise_to_01(lac$inform_risk_score, method = "minmax")
+  ins_pen       <- 1 - inform_norm  # inverse: lower INFORM -> more insurance capacity
+
+  # Component 2: Social protection coverage (governance proxy)
+  gov_clipped   <- pmin(pmax(dplyr::coalesce(lac$gov_eff, 0), -2.5), 2.5)
+  gov_norm      <- (gov_clipped + 2.5) / 5.0
+  social_prot   <- gov_norm
+
+  # Component 3: Fiscal space (inverse of disaster loss rate)
+  loss_norm     <- normalise_to_01(dplyr::coalesce(lac$losses_pct_gdp, 0), method = "minmax")
+  fiscal_space  <- 1 - loss_norm  # lower losses = more fiscal buffer
+
+  # Component 4: DRM legal framework (gov_eff + rule_of_law average)
+  rl_clipped    <- pmin(pmax(dplyr::coalesce(lac$rule_of_law, 0), -2.5), 2.5)
+  rl_norm       <- (rl_clipped + 2.5) / 5.0
+  drm_legal     <- (gov_norm + rl_norm) / 2
+
+  # Weighted recovery readiness
+  lac$recovery_readiness_score <- pmin(
+    (0.35 * ins_pen + 0.25 * social_prot + 0.20 * fiscal_space + 0.20 * drm_legal),
+    1.0
+  )
+
+  # ---- Protection Gap (REC-02) ----
+  # Per-country adjustment from LAC regional mean (0.81)
+  # GDP per capita effect: higher GDP/capita -> lower gap
+  gdp_per_cap      <- lac$gdp_usd / lac$pop_total
+  gdp_pc_norm      <- normalise_to_01(gdp_per_cap, method = "minmax")
+  gdp_adjustment   <- -0.20 * gdp_pc_norm  # range: [0, -0.20]
+
+  # Governance effect
+  gov_adjustment   <- -0.10 * gov_norm  # range: [0, -0.10]
+
+  # SIDS premium: higher gap for small island states
+  sids_premium     <- ifelse(lac$sids_reliability_flag, 0.10, 0.0)
+
+  # Disaster exposure premium: higher losses_pct_gdp -> less insurance capacity
+  loss_premium     <- 0.08 * loss_norm  # range: [0, 0.08]
+
+  raw_gap <- LAC_PROTECTION_GAP_REGIONAL + gdp_adjustment + gov_adjustment +
+             sids_premium + loss_premium
+
+  # Clamp to [0.40, 0.98]
+  lac$protection_gap <- pmin(pmax(raw_gap, 0.40), 0.98)
+
+  # Verify calibration -- print warning if outside target range
+  wt_mean <- weighted.mean(lac$protection_gap, lac$gdp_usd)
+  if (wt_mean < 0.76 || wt_mean > 0.86) {
+    warning(
+      "score_recovery: GDP-weighted protection gap = ", round(wt_mean, 3),
+      " -- outside [0.76, 0.86] target. Adjust LAC_PROTECTION_GAP_REGIONAL or premiums."
+    )
+  }
+  message("score_recovery: GDP-weighted gap = ", round(wt_mean, 3),
+          " | Haiti=", round(lac$protection_gap[lac$iso3 == "HTI"], 3),
+          " Chile=", round(lac$protection_gap[lac$iso3 == "CHL"], 3))
+
+  # ---- Parametric Insurance Flag (REC-03) ----
+  lac$parametric_flag <- dplyr::case_when(
+    lac$sids_reliability_flag                       ~ "CCRIF Eligible",
+    lac$sub_region == "Central America"             ~ "Parametric Candidate",
+    lac$protection_gap > 0.88                       ~ "Priority Intervention",
+    TRUE                                            ~ "Traditional Insurance"
+  )
+
+  lac
+}
+
 score_sendai       <- function(lac) { message("score_sendai: stub"); lac }
 assemble_outputs   <- function(lac) { message("assemble_outputs: stub"); lac }
 
