@@ -1,0 +1,163 @@
+iso3,country,hazard_type,hazard_level,data_source,reliability_flag,is_synthetic
+HTI,Haiti,EQ,HIG,ThinkHazard-synthetic,6,TRUE
+HTI,Haiti,FL,HIG,ThinkHazard-synthetic,6,TRUE
+HTI,Haiti,CY,HIG,ThinkHazard-synthetic,6,TRUE
+HTI,Haiti,VO,LOW,ThinkHazard-synthetic,6,TRUE
+HTI,Haiti,LS,HIG,ThinkHazard-synthetic,6,TRUE
+HTI,Haiti,DR,MED,ThinkHazard-synthetic,6,TRUE
+GTM,Guatemala,EQ,HIG,ThinkHazard-synthetic,6,TRUE
+GTM,Guatemala,FL,HIG,ThinkHazard-synthetic,6,TRUE
+GTM,Guatemala,CY,MED,ThinkHazard-synthetic,6,TRUE
+GTM,Guatemala,VO,HIG,ThinkHazard-synthetic,6,TRUE
+GTM,Guatemala,LS,HIG,ThinkHazard-synthetic,6,TRUE
+GTM,Guatemala,DR,MED,ThinkHazard-synthetic,6,TRUE
+MEX,Mexico,EQ,MED,ThinkHazard-synthetic,6,TRUE
+MEX,Mexico,FL,MED,ThinkHazard-synthetic,6,TRUE
+MEX,Mexico,CY,HIG,ThinkHazard-synthetic,6,TRUE
+MEX,Mexico,VO,MED,ThinkHazard-synthetic,6,TRUE
+MEX,Mexico,LS,MED,ThinkHazard-synthetic,6,TRUE
+MEX,Mexico,DR,MED,ThinkHazard-synthetic,6,TRUE
+BRA,Brazil,EQ,LOW,ThinkHazard-synthetic,6,TRUE
+BRA,Brazil,FL,MED,ThinkHazard-synthetic,6,TRUE
+BRA,Brazil,CY,LOW,ThinkHazard-synthetic,6,TRUE
+BRA,Brazil,VO,VLO,ThinkHazard-synthetic,6,TRUE
+BRA,Brazil,LS,LOW,ThinkHazard-synthetic,6,TRUE
+BRA,Brazil,DR,MED,ThinkHazard-synthetic,6,TRUE
+CHL,Chile,EQ,HIG,ThinkHazard-synthetic,6,TRUE
+CHL,Chile,FL,MED,ThinkHazard-synthetic,6,TRUE
+CHL,Chile,CY,VLO,ThinkHazard-synthetic,6,TRUE
+CHL,Chile,VO,MED,ThinkHazard-synthetic,6,TRUE
+CHL,Chile,LS,MED,ThinkHazard-synthetic,6,TRUE
+CHL,Chile,DR,MED,ThinkHazard-synthetic,6,TRUE
+JAM,Jamaica,EQ,MED,ThinkHazard-synthetic,6,TRUE
+JAM,Jamaica,FL,MED,ThinkHazard-synthetic,6,TRUE
+JAM,Jamaica,CY,HIG,ThinkHazard-synthetic,6,TRUE
+JAM,Jamaica,VO,VLO,ThinkHazard-synthetic,6,TRUE
+JAM,Jamaica,LS,MED,ThinkHazard-synthetic,6,TRUE
+JAM,Jamaica,DR,LOW,ThinkHazard-synthetic,6,TRUE
+COL,Colombia,EQ,HIG,ThinkHazard-synthetic,6,TRUE
+COL,Colombia,FL,HIG,ThinkHazard-synthetic,6,TRUE
+COL,Colombia,CY,LOW,ThinkHazard-synthetic,6,TRUE
+COL,Colombia,VO,HIG,ThinkHazard-synthetic,6,TRUE
+COL,Colombia,LS,HIG,ThinkHazard-synthetic,6,TRUE
+COL,Colombia,DR,MED,ThinkHazard-synthetic,6,TRUE
+ECU,Ecuador,EQ,HIG,ThinkHazard-synthetic,6,TRUE
+ECU,Ecuador,FL,MED,ThinkHazard-synthetic,6,TRUE
+ECU,Ecuador,CY,LOW,ThinkHazard-synthetic,6,TRUE
+ECU,Ecuador,VO,HIG,ThinkHazard-synthetic,6,TRUE
+ECU,Ecuador,LS,HIG,ThinkHazard-synthetic,6,TRUE
+ECU,Ecuador,DR,MED,ThinkHazard-synthetic,6,TRUE
+PER,Peru,EQ,HIG,ThinkHazard-synthetic,6,TRUE
+PER,Peru,FL,MED,ThinkHazard-synthetic,6,TRUE
+PER,Peru,CY,LOW,ThinkHazard-synthetic,6,TRUE
+PER,Peru,VO,MED,ThinkHazard-synthetic,6,TRUE
+PER,Peru,LS,HIG,ThinkHazard-synthetic,6,TRUE
+PER,Peru,DR,MED,ThinkHazard-synthetic,6,TRUE
+ARG,Argentina,EQ,MED,ThinkHazard-synthetic,6,TRUE
+ARG,Argentina,FL,MED,ThinkHazard-synthetic,6,TRUE
+ARG,Argentina,CY,LOW,ThinkHazard-synthetic,6,TRUE
+ARG,Argentina,VO,LOW,ThinkHazard-synthetic,6,TRUE
+ARG,Argentina,LS,LOW,ThinkHazard-synthetic,6,TRUE
+ARG,Argentina,DR,MED,ThinkHazard-synthetic,6,TRUE
+BOL,Bolivia,EQ,MED,ThinkHazard-synthetic,6,TRUE
+BOL,Bolivia,FL,MED,ThinkHazard-synthetic,6,TRUE
+BOL,Bolivia,CY,VLO,ThinkHazard-synthetic,6,TRUE
+BOL,Bolivia,VO,LOW,ThinkHazard-synthetic,6,TRUE
+BOL,Bolivia,LS,MED,ThinkHazard-synthetic,6,TRUE
+BOL,Bolivia,DR,MED,ThinkHazard-synthetic,6,TRUE
+HND,Honduras,EQ,MED,ThinkHazard-synthetic,6,TRUE
+HND,Honduras,FL,HIG,ThinkHazard-synthetic,6,TRUE
+HND,Honduras,CY,HIG,ThinkHazard-synthetic,6,TRUE
+HND,Honduras,VO,LOW,ThinkHazard-synthetic,6,TRUE
+HND,Honduras,LS,HIG,ThinkHazard-synthetic,6,TRUE
+HND,Honduras,DR,MED,ThinkHazard-synthetic,6,TRUE
+NIC,Nicaragua,EQ,MED,ThinkHazard-synthetic,6,TRUE
+NIC,Nicaragua,FL,HIG,ThinkHazard-synthetic,6,TRUE
+NIC,Nicaragua,CY,HIG,ThinkHazard-synthetic,6,TRUE
+NIC,Nicaragua,VO,MED,ThinkHazard-synthetic,6,TRUE
+NIC,Nicaragua,LS,MED,ThinkHazard-synthetic,6,TRUE
+NIC,Nicaragua,DR,MED,ThinkHazard-synthetic,6,TRUE
+CRI,Costa Rica,EQ,HIG,ThinkHazard-synthetic,6,TRUE
+CRI,Costa Rica,FL,HIG,ThinkHazard-synthetic,6,TRUE
+CRI,Costa Rica,CY,LOW,ThinkHazard-synthetic,6,TRUE
+CRI,Costa Rica,VO,MED,ThinkHazard-synthetic,6,TRUE
+CRI,Costa Rica,LS,HIG,ThinkHazard-synthetic,6,TRUE
+CRI,Costa Rica,DR,LOW,ThinkHazard-synthetic,6,TRUE
+PAN,Panama,EQ,MED,ThinkHazard-synthetic,6,TRUE
+PAN,Panama,FL,HIG,ThinkHazard-synthetic,6,TRUE
+PAN,Panama,CY,LOW,ThinkHazard-synthetic,6,TRUE
+PAN,Panama,VO,LOW,ThinkHazard-synthetic,6,TRUE
+PAN,Panama,LS,MED,ThinkHazard-synthetic,6,TRUE
+PAN,Panama,DR,LOW,ThinkHazard-synthetic,6,TRUE
+SLV,El Salvador,EQ,HIG,ThinkHazard-synthetic,6,TRUE
+SLV,El Salvador,FL,HIG,ThinkHazard-synthetic,6,TRUE
+SLV,El Salvador,CY,MED,ThinkHazard-synthetic,6,TRUE
+SLV,El Salvador,VO,HIG,ThinkHazard-synthetic,6,TRUE
+SLV,El Salvador,LS,HIG,ThinkHazard-synthetic,6,TRUE
+SLV,El Salvador,DR,MED,ThinkHazard-synthetic,6,TRUE
+VEN,Venezuela,EQ,MED,ThinkHazard-synthetic,6,TRUE
+VEN,Venezuela,FL,MED,ThinkHazard-synthetic,6,TRUE
+VEN,Venezuela,CY,LOW,ThinkHazard-synthetic,6,TRUE
+VEN,Venezuela,VO,LOW,ThinkHazard-synthetic,6,TRUE
+VEN,Venezuela,LS,MED,ThinkHazard-synthetic,6,TRUE
+VEN,Venezuela,DR,MED,ThinkHazard-synthetic,6,TRUE
+GUY,Guyana,EQ,LOW,ThinkHazard-synthetic,6,TRUE
+GUY,Guyana,FL,MED,ThinkHazard-synthetic,6,TRUE
+GUY,Guyana,CY,MED,ThinkHazard-synthetic,6,TRUE
+GUY,Guyana,VO,VLO,ThinkHazard-synthetic,6,TRUE
+GUY,Guyana,LS,LOW,ThinkHazard-synthetic,6,TRUE
+GUY,Guyana,DR,MED,ThinkHazard-synthetic,6,TRUE
+SUR,Suriname,EQ,LOW,ThinkHazard-synthetic,6,TRUE
+SUR,Suriname,FL,MED,ThinkHazard-synthetic,6,TRUE
+SUR,Suriname,CY,MED,ThinkHazard-synthetic,6,TRUE
+SUR,Suriname,VO,VLO,ThinkHazard-synthetic,6,TRUE
+SUR,Suriname,LS,LOW,ThinkHazard-synthetic,6,TRUE
+SUR,Suriname,DR,MED,ThinkHazard-synthetic,6,TRUE
+TTO,Trinidad and Tobago,EQ,MED,ThinkHazard-synthetic,6,TRUE
+TTO,Trinidad and Tobago,FL,MED,ThinkHazard-synthetic,6,TRUE
+TTO,Trinidad and Tobago,CY,MED,ThinkHazard-synthetic,6,TRUE
+TTO,Trinidad and Tobago,VO,LOW,ThinkHazard-synthetic,6,TRUE
+TTO,Trinidad and Tobago,LS,MED,ThinkHazard-synthetic,6,TRUE
+TTO,Trinidad and Tobago,DR,LOW,ThinkHazard-synthetic,6,TRUE
+BRB,Barbados,EQ,LOW,ThinkHazard-synthetic,6,TRUE
+BRB,Barbados,FL,MED,ThinkHazard-synthetic,6,TRUE
+BRB,Barbados,CY,HIG,ThinkHazard-synthetic,6,TRUE
+BRB,Barbados,VO,VLO,ThinkHazard-synthetic,6,TRUE
+BRB,Barbados,LS,LOW,ThinkHazard-synthetic,6,TRUE
+BRB,Barbados,DR,MED,ThinkHazard-synthetic,6,TRUE
+ATG,Antigua and Barbuda,EQ,LOW,ThinkHazard-synthetic,6,TRUE
+ATG,Antigua and Barbuda,FL,MED,ThinkHazard-synthetic,6,TRUE
+ATG,Antigua and Barbuda,CY,HIG,ThinkHazard-synthetic,6,TRUE
+ATG,Antigua and Barbuda,VO,LOW,ThinkHazard-synthetic,6,TRUE
+ATG,Antigua and Barbuda,LS,LOW,ThinkHazard-synthetic,6,TRUE
+ATG,Antigua and Barbuda,DR,MED,ThinkHazard-synthetic,6,TRUE
+LCA,Saint Lucia,EQ,MED,ThinkHazard-synthetic,6,TRUE
+LCA,Saint Lucia,FL,MED,ThinkHazard-synthetic,6,TRUE
+LCA,Saint Lucia,CY,HIG,ThinkHazard-synthetic,6,TRUE
+LCA,Saint Lucia,VO,MED,ThinkHazard-synthetic,6,TRUE
+LCA,Saint Lucia,LS,MED,ThinkHazard-synthetic,6,TRUE
+LCA,Saint Lucia,DR,LOW,ThinkHazard-synthetic,6,TRUE
+VCT,Saint Vincent,EQ,MED,ThinkHazard-synthetic,6,TRUE
+VCT,Saint Vincent,FL,MED,ThinkHazard-synthetic,6,TRUE
+VCT,Saint Vincent,CY,HIG,ThinkHazard-synthetic,6,TRUE
+VCT,Saint Vincent,VO,HIG,ThinkHazard-synthetic,6,TRUE
+VCT,Saint Vincent,LS,MED,ThinkHazard-synthetic,6,TRUE
+VCT,Saint Vincent,DR,LOW,ThinkHazard-synthetic,6,TRUE
+GRD,Grenada,EQ,MED,ThinkHazard-synthetic,6,TRUE
+GRD,Grenada,FL,MED,ThinkHazard-synthetic,6,TRUE
+GRD,Grenada,CY,HIG,ThinkHazard-synthetic,6,TRUE
+GRD,Grenada,VO,LOW,ThinkHazard-synthetic,6,TRUE
+GRD,Grenada,LS,MED,ThinkHazard-synthetic,6,TRUE
+GRD,Grenada,DR,LOW,ThinkHazard-synthetic,6,TRUE
+DOM,Dominican Republic,EQ,MED,ThinkHazard-synthetic,6,TRUE
+DOM,Dominican Republic,FL,MED,ThinkHazard-synthetic,6,TRUE
+DOM,Dominican Republic,CY,HIG,ThinkHazard-synthetic,6,TRUE
+DOM,Dominican Republic,VO,LOW,ThinkHazard-synthetic,6,TRUE
+DOM,Dominican Republic,LS,MED,ThinkHazard-synthetic,6,TRUE
+DOM,Dominican Republic,DR,MED,ThinkHazard-synthetic,6,TRUE
+BLZ,Belize,EQ,LOW,ThinkHazard-synthetic,6,TRUE
+BLZ,Belize,FL,MED,ThinkHazard-synthetic,6,TRUE
+BLZ,Belize,CY,HIG,ThinkHazard-synthetic,6,TRUE
+BLZ,Belize,VO,VLO,ThinkHazard-synthetic,6,TRUE
+BLZ,Belize,LS,LOW,ThinkHazard-synthetic,6,TRUE
+BLZ,Belize,DR,MED,ThinkHazard-synthetic,6,TRUE

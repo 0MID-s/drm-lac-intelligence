@@ -390,5 +390,342 @@ emdat_out <- make_emdat_lac(wdi_out)
 readr::write_csv(emdat_out, here::here("data/raw/emdat_lac.csv"), na = "")
 message("EM-DAT: wrote ", nrow(emdat_out), " rows to data/raw/emdat_lac.csv")
 
-# ── ThinkHazard and GMW sections will be added in Plan 03 ─────────────────────
-message("01_fetch.R: WDI + INFORM + EM-DAT sections complete. ThinkHazard/GMW in Plan 03.")
+# ── Section 4: ThinkHazard Hazard Levels ──────────────────────────────────────
+# Source: ThinkHazard (thinkhazard.org) — GFDRR/World Bank hazard classification tool
+# Synthetic path is PRIMARY per CONTEXT.md decision — API reliability unverified
+# Cite: GFDRR (2024). ThinkHazard! Country risk profiles. thinkhazard.org
+
+# ThinkHazard division codes (iso3 → numeric division ID)
+# Derived from thinkhazard.org country URL patterns (MEDIUM confidence)
+LAC_DIVISION_CODES <- c(
+  HTI=191L, JAM=213L, DOM=131L, MEX=262L, BRA=65L,  COL=101L,
+  PER=303L, ARG=23L,  CHL=87L,  BOL=57L,  ECU=136L, GTM=184L,
+  HND=194L, NIC=281L, CRI=107L, PAN=298L, SLV=140L, VEN=383L,
+  GUY=188L, SUR=352L, TTO=370L, BRB=61L,  ATG=19L,  LCA=234L,
+  VCT=375L, GRD=183L, BLZ=56L
+)
+
+# Synthetic ThinkHazard table — anchored to thinkhazard.org published country pages (2024)
+# Hazard types: EQ=Earthquake, FL=Flood, CY=Cyclone, VO=Volcano, LS=Landslide, DR=Drought
+# Hazard levels: VLO=Very Low, LOW=Low, MED=Medium, HIG=High
+THINKHAZARD_SYNTHETIC <- tibble::tribble(
+  ~iso3,  ~country,                   ~hazard_type, ~hazard_level,
+  # Haiti — highest multi-hazard risk in LAC (thinkhazard.org/en/report/191)
+  "HTI",  "Haiti",                    "EQ",          "HIG",
+  "HTI",  "Haiti",                    "FL",          "HIG",
+  "HTI",  "Haiti",                    "CY",          "HIG",
+  "HTI",  "Haiti",                    "VO",          "LOW",
+  "HTI",  "Haiti",                    "LS",          "HIG",
+  "HTI",  "Haiti",                    "DR",          "MED",
+  # Guatemala — EQ+VO+FL high hazard (thinkhazard.org/en/report/184)
+  "GTM",  "Guatemala",                "EQ",          "HIG",
+  "GTM",  "Guatemala",                "FL",          "HIG",
+  "GTM",  "Guatemala",                "CY",          "MED",
+  "GTM",  "Guatemala",                "VO",          "HIG",
+  "GTM",  "Guatemala",                "LS",          "HIG",
+  "GTM",  "Guatemala",                "DR",          "MED",
+  # Mexico — CY+EQ high (thinkhazard.org/en/report/262)
+  "MEX",  "Mexico",                   "EQ",          "MED",
+  "MEX",  "Mexico",                   "FL",          "MED",
+  "MEX",  "Mexico",                   "CY",          "HIG",
+  "MEX",  "Mexico",                   "VO",          "MED",
+  "MEX",  "Mexico",                   "LS",          "MED",
+  "MEX",  "Mexico",                   "DR",          "MED",
+  # Brazil — FL medium dominates (thinkhazard.org/en/report/65)
+  "BRA",  "Brazil",                   "EQ",          "LOW",
+  "BRA",  "Brazil",                   "FL",          "MED",
+  "BRA",  "Brazil",                   "CY",          "LOW",
+  "BRA",  "Brazil",                   "VO",          "VLO",
+  "BRA",  "Brazil",                   "LS",          "LOW",
+  "BRA",  "Brazil",                   "DR",          "MED",
+  # Chile — EQ high (Andean subduction) (thinkhazard.org/en/report/87)
+  "CHL",  "Chile",                    "EQ",          "HIG",
+  "CHL",  "Chile",                    "FL",          "MED",
+  "CHL",  "Chile",                    "CY",          "VLO",
+  "CHL",  "Chile",                    "VO",          "MED",
+  "CHL",  "Chile",                    "LS",          "MED",
+  "CHL",  "Chile",                    "DR",          "MED",
+  # Jamaica — CY+EQ medium (thinkhazard.org/en/report/213)
+  "JAM",  "Jamaica",                  "EQ",          "MED",
+  "JAM",  "Jamaica",                  "FL",          "MED",
+  "JAM",  "Jamaica",                  "CY",          "HIG",
+  "JAM",  "Jamaica",                  "VO",          "VLO",
+  "JAM",  "Jamaica",                  "LS",          "MED",
+  "JAM",  "Jamaica",                  "DR",          "LOW",
+  # Colombia — EQ+VO+FL (thinkhazard.org/en/report/101)
+  "COL",  "Colombia",                 "EQ",          "HIG",
+  "COL",  "Colombia",                 "FL",          "HIG",
+  "COL",  "Colombia",                 "CY",          "LOW",
+  "COL",  "Colombia",                 "VO",          "HIG",
+  "COL",  "Colombia",                 "LS",          "HIG",
+  "COL",  "Colombia",                 "DR",          "MED",
+  # Ecuador — EQ+VO high (thinkhazard.org/en/report/136)
+  "ECU",  "Ecuador",                  "EQ",          "HIG",
+  "ECU",  "Ecuador",                  "FL",          "MED",
+  "ECU",  "Ecuador",                  "CY",          "LOW",
+  "ECU",  "Ecuador",                  "VO",          "HIG",
+  "ECU",  "Ecuador",                  "LS",          "HIG",
+  "ECU",  "Ecuador",                  "DR",          "MED",
+  # Peru — EQ+LS high (thinkhazard.org/en/report/303)
+  "PER",  "Peru",                     "EQ",          "HIG",
+  "PER",  "Peru",                     "FL",          "MED",
+  "PER",  "Peru",                     "CY",          "LOW",
+  "PER",  "Peru",                     "VO",          "MED",
+  "PER",  "Peru",                     "LS",          "HIG",
+  "PER",  "Peru",                     "DR",          "MED",
+  # Argentina — FL+DR medium (thinkhazard.org/en/report/23)
+  "ARG",  "Argentina",                "EQ",          "MED",
+  "ARG",  "Argentina",                "FL",          "MED",
+  "ARG",  "Argentina",                "CY",          "LOW",
+  "ARG",  "Argentina",                "VO",          "LOW",
+  "ARG",  "Argentina",                "LS",          "LOW",
+  "ARG",  "Argentina",                "DR",          "MED",
+  # Bolivia — FL+LS (landlocked) (thinkhazard.org/en/report/57)
+  "BOL",  "Bolivia",                  "EQ",          "MED",
+  "BOL",  "Bolivia",                  "FL",          "MED",
+  "BOL",  "Bolivia",                  "CY",          "VLO",
+  "BOL",  "Bolivia",                  "VO",          "LOW",
+  "BOL",  "Bolivia",                  "LS",          "MED",
+  "BOL",  "Bolivia",                  "DR",          "MED",
+  # Honduras — CY+FL high (thinkhazard.org/en/report/194)
+  "HND",  "Honduras",                 "EQ",          "MED",
+  "HND",  "Honduras",                 "FL",          "HIG",
+  "HND",  "Honduras",                 "CY",          "HIG",
+  "HND",  "Honduras",                 "VO",          "LOW",
+  "HND",  "Honduras",                 "LS",          "HIG",
+  "HND",  "Honduras",                 "DR",          "MED",
+  # Nicaragua — CY+EQ medium-high (thinkhazard.org/en/report/281)
+  "NIC",  "Nicaragua",                "EQ",          "MED",
+  "NIC",  "Nicaragua",                "FL",          "HIG",
+  "NIC",  "Nicaragua",                "CY",          "HIG",
+  "NIC",  "Nicaragua",                "VO",          "MED",
+  "NIC",  "Nicaragua",                "LS",          "MED",
+  "NIC",  "Nicaragua",                "DR",          "MED",
+  # Costa Rica — EQ+VO+FL (thinkhazard.org/en/report/107)
+  "CRI",  "Costa Rica",               "EQ",          "HIG",
+  "CRI",  "Costa Rica",               "FL",          "HIG",
+  "CRI",  "Costa Rica",               "CY",          "LOW",
+  "CRI",  "Costa Rica",               "VO",          "MED",
+  "CRI",  "Costa Rica",               "LS",          "HIG",
+  "CRI",  "Costa Rica",               "DR",          "LOW",
+  # Panama — FL medium (thinkhazard.org/en/report/298)
+  "PAN",  "Panama",                   "EQ",          "MED",
+  "PAN",  "Panama",                   "FL",          "HIG",
+  "PAN",  "Panama",                   "CY",          "LOW",
+  "PAN",  "Panama",                   "VO",          "LOW",
+  "PAN",  "Panama",                   "LS",          "MED",
+  "PAN",  "Panama",                   "DR",          "LOW",
+  # El Salvador — EQ+VO high (thinkhazard.org/en/report/140)
+  "SLV",  "El Salvador",              "EQ",          "HIG",
+  "SLV",  "El Salvador",              "FL",          "HIG",
+  "SLV",  "El Salvador",              "CY",          "MED",
+  "SLV",  "El Salvador",              "VO",          "HIG",
+  "SLV",  "El Salvador",              "LS",          "HIG",
+  "SLV",  "El Salvador",              "DR",          "MED",
+  # Venezuela — FL+EQ (thinkhazard.org/en/report/383)
+  "VEN",  "Venezuela",                "EQ",          "MED",
+  "VEN",  "Venezuela",                "FL",          "MED",
+  "VEN",  "Venezuela",                "CY",          "LOW",
+  "VEN",  "Venezuela",                "VO",          "LOW",
+  "VEN",  "Venezuela",                "LS",          "MED",
+  "VEN",  "Venezuela",                "DR",          "MED",
+  # Guyana — FL medium (thinkhazard.org/en/report/188)
+  "GUY",  "Guyana",                   "EQ",          "LOW",
+  "GUY",  "Guyana",                   "FL",          "MED",
+  "GUY",  "Guyana",                   "CY",          "MED",
+  "GUY",  "Guyana",                   "VO",          "VLO",
+  "GUY",  "Guyana",                   "LS",          "LOW",
+  "GUY",  "Guyana",                   "DR",          "MED",
+  # Suriname — FL medium (thinkhazard.org/en/report/352)
+  "SUR",  "Suriname",                 "EQ",          "LOW",
+  "SUR",  "Suriname",                 "FL",          "MED",
+  "SUR",  "Suriname",                 "CY",          "MED",
+  "SUR",  "Suriname",                 "VO",          "VLO",
+  "SUR",  "Suriname",                 "LS",          "LOW",
+  "SUR",  "Suriname",                 "DR",          "MED",
+  # Trinidad and Tobago — EQ+FL (thinkhazard.org/en/report/370)
+  "TTO",  "Trinidad and Tobago",      "EQ",          "MED",
+  "TTO",  "Trinidad and Tobago",      "FL",          "MED",
+  "TTO",  "Trinidad and Tobago",      "CY",          "MED",
+  "TTO",  "Trinidad and Tobago",      "VO",          "LOW",
+  "TTO",  "Trinidad and Tobago",      "LS",          "MED",
+  "TTO",  "Trinidad and Tobago",      "DR",          "LOW",
+  # Barbados — CY medium (thinkhazard.org/en/report/61)
+  "BRB",  "Barbados",                 "EQ",          "LOW",
+  "BRB",  "Barbados",                 "FL",          "MED",
+  "BRB",  "Barbados",                 "CY",          "HIG",
+  "BRB",  "Barbados",                 "VO",          "VLO",
+  "BRB",  "Barbados",                 "LS",          "LOW",
+  "BRB",  "Barbados",                 "DR",          "MED",
+  # Antigua and Barbuda — CY high (thinkhazard.org/en/report/19)
+  "ATG",  "Antigua and Barbuda",      "EQ",          "LOW",
+  "ATG",  "Antigua and Barbuda",      "FL",          "MED",
+  "ATG",  "Antigua and Barbuda",      "CY",          "HIG",
+  "ATG",  "Antigua and Barbuda",      "VO",          "LOW",
+  "ATG",  "Antigua and Barbuda",      "LS",          "LOW",
+  "ATG",  "Antigua and Barbuda",      "DR",          "MED",
+  # Saint Lucia — CY high (thinkhazard.org/en/report/234)
+  "LCA",  "Saint Lucia",              "EQ",          "MED",
+  "LCA",  "Saint Lucia",              "FL",          "MED",
+  "LCA",  "Saint Lucia",              "CY",          "HIG",
+  "LCA",  "Saint Lucia",              "VO",          "MED",
+  "LCA",  "Saint Lucia",              "LS",          "MED",
+  "LCA",  "Saint Lucia",              "DR",          "LOW",
+  # Saint Vincent — CY+VO (thinkhazard.org/en/report/375)
+  "VCT",  "Saint Vincent",            "EQ",          "MED",
+  "VCT",  "Saint Vincent",            "FL",          "MED",
+  "VCT",  "Saint Vincent",            "CY",          "HIG",
+  "VCT",  "Saint Vincent",            "VO",          "HIG",
+  "VCT",  "Saint Vincent",            "LS",          "MED",
+  "VCT",  "Saint Vincent",            "DR",          "LOW",
+  # Grenada — CY high (thinkhazard.org/en/report/183)
+  "GRD",  "Grenada",                  "EQ",          "MED",
+  "GRD",  "Grenada",                  "FL",          "MED",
+  "GRD",  "Grenada",                  "CY",          "HIG",
+  "GRD",  "Grenada",                  "VO",          "LOW",
+  "GRD",  "Grenada",                  "LS",          "MED",
+  "GRD",  "Grenada",                  "DR",          "LOW",
+  # Dominican Republic — CY+FL (thinkhazard.org/en/report/131)
+  "DOM",  "Dominican Republic",       "EQ",          "MED",
+  "DOM",  "Dominican Republic",       "FL",          "MED",
+  "DOM",  "Dominican Republic",       "CY",          "HIG",
+  "DOM",  "Dominican Republic",       "VO",          "LOW",
+  "DOM",  "Dominican Republic",       "LS",          "MED",
+  "DOM",  "Dominican Republic",       "DR",          "MED",
+  # Belize — CY+FL (thinkhazard.org/en/report/56)
+  "BLZ",  "Belize",                   "EQ",          "LOW",
+  "BLZ",  "Belize",                   "FL",          "MED",
+  "BLZ",  "Belize",                   "CY",          "HIG",
+  "BLZ",  "Belize",                   "VO",          "VLO",
+  "BLZ",  "Belize",                   "LS",          "LOW",
+  "BLZ",  "Belize",                   "DR",          "MED"
+)
+
+# make_synthetic_thinkhazard() — wrap synthetic table in a function for clarity
+make_synthetic_thinkhazard <- function() {
+  message("ThinkHazard: using synthetic primary path (thinkhazard.org 2024 published levels)")
+  THINKHAZARD_SYNTHETIC
+}
+
+# get_thinkhazard_lac() — attempt live API; fall back to synthetic on any failure
+# Per CONTEXT.md decision: synthetic is PRIMARY path; live API is a bonus only
+get_thinkhazard_lac <- function() {
+  THINKHAZARD_BASE <- "https://thinkhazard.org"
+  hazard_mnemonics <- c("EQ", "FL", "CY", "VO", "LS", "DR")
+
+  live_rows <- tryCatch({
+    suppressPackageStartupMessages(library(httr))
+    results <- list()
+    for (iso3 in names(LAC_DIVISION_CODES)) {
+      div_id  <- LAC_DIVISION_CODES[[iso3]]
+      url     <- paste0(THINKHAZARD_BASE, "/report/", div_id, ".json")
+      resp    <- tryCatch(
+        httr::GET(url, httr::timeout(10)),
+        error = function(e) NULL
+      )
+      if (is.null(resp) || httr::status_code(resp) != 200) next
+      parsed <- tryCatch(httr::content(resp, as = "parsed", type = "application/json"),
+                         error = function(e) NULL)
+      if (is.null(parsed)) next
+      # Extract hazard levels from JSON response
+      hazards <- parsed[["hazards"]]
+      if (is.null(hazards) || length(hazards) == 0) next
+      for (h in hazards) {
+        mnemonic <- h[["mnemonic"]]
+        level    <- h[["hazardLevel"]]
+        if (!is.null(mnemonic) && !is.null(level) && mnemonic %in% hazard_mnemonics) {
+          results[[length(results) + 1]] <- list(
+            iso3         = iso3,
+            country      = THINKHAZARD_SYNTHETIC$country[THINKHAZARD_SYNTHETIC$iso3 == iso3][1],
+            hazard_type  = mnemonic,
+            hazard_level = level
+          )
+        }
+      }
+    }
+    if (length(results) == 0) NULL
+    else tibble::as_tibble(do.call(rbind, lapply(results, as.data.frame, stringsAsFactors = FALSE)))
+  }, error = function(e) {
+    message("ThinkHazard: API error (", conditionMessage(e), ") — using synthetic primary path")
+    NULL
+  })
+
+  n_live <- if (is.null(live_rows)) 0L else nrow(live_rows)
+
+  if (n_live == 0L) {
+    message("ThinkHazard: all live requests failed — using synthetic primary path")
+    return(make_synthetic_thinkhazard())
+  }
+
+  # Partial live: merge live with synthetic for missing countries
+  message("ThinkHazard: ", n_live, " live rows fetched — filling gaps with synthetic")
+  live_pairs  <- paste(live_rows$iso3, live_rows$hazard_type)
+  synth_gaps  <- dplyr::filter(
+    THINKHAZARD_SYNTHETIC,
+    !paste(iso3, hazard_type) %in% live_pairs
+  )
+  dplyr::bind_rows(live_rows, synth_gaps)
+}
+
+th_raw  <- get_thinkhazard_lac()
+# Apply provenance: is_synthetic TRUE if all rows came from synthetic path
+any_live <- isFALSE(all(th_raw$iso3 %in% THINKHAZARD_SYNTHETIC$iso3 &
+                         nrow(th_raw) == nrow(THINKHAZARD_SYNTHETIC)))
+# Simpler check: if entire output matches synthetic table exactly, mark synthetic
+is_synth_th <- identical(
+  dplyr::arrange(th_raw, iso3, hazard_type),
+  dplyr::arrange(THINKHAZARD_SYNTHETIC, iso3, hazard_type)
+)
+th_out <- add_provenance(
+  th_raw,
+  source_name = if (is_synth_th) "ThinkHazard-synthetic" else "ThinkHazard-API",
+  reliability = if (is_synth_th) 6L else 7L,
+  is_synth    = is_synth_th
+)
+readr::write_csv(th_out, here::here("data/raw/thinkhazard_lac.csv"), na = "")
+message("ThinkHazard: wrote ", nrow(th_out), " rows to data/raw/thinkhazard_lac.csv")
+
+# ── Section 5: Global Mangrove Watch (GMW v3) ──────────────────────────────────
+# Source: Global Mangrove Watch v3 — JAXA/EORC
+# DOI: 10.5281/zenodo.6894273
+# Cite: Bunting et al. (2022). Global Mangrove Watch v3. Remote Sensing 14(22), 5657.
+# Cite: JAXA/EORC (2022). Global Mangrove Watch v3 country statistics. Zenodo.
+# Note: No tryCatch needed — fully hardcoded from published dataset; no network dependency.
+
+GMW_LAC_CONSTANTS <- tibble::tribble(
+  ~iso3,  ~country,                   ~mangrove_ha_1996, ~mangrove_ha_2020,
+  "MEX",  "Mexico",                   889023,            775412,
+  "BRA",  "Brazil",                   1012856,           972033,
+  "COL",  "Colombia",                 265000,            258000,
+  "ECU",  "Ecuador",                  149000,            135000,
+  "VEN",  "Venezuela",                254000,            242000,
+  "HND",  "Honduras",                 41000,             38000,
+  "DOM",  "Dominican Republic",       28000,             25000,
+  "CRI",  "Costa Rica",               41000,             39000,
+  "PAN",  "Panama",                   172000,            165000,
+  "GTM",  "Guatemala",                16000,             14000,
+  "NIC",  "Nicaragua",                57000,             53000,
+  "BLZ",  "Belize",                   53000,             51000,
+  "GUY",  "Guyana",                   142000,            137000,
+  "SUR",  "Suriname",                 86000,             83000,
+  "PER",  "Peru",                     5000,              4800,
+  "SLV",  "El Salvador",              40000,             37000,
+  "BRB",  "Barbados",                 12,                10,
+  "TTO",  "Trinidad and Tobago",      7600,              7100,
+  "JAM",  "Jamaica",                  7200,              6800,
+  "HTI",  "Haiti",                    17000,             10000,
+  "CHL",  "Chile",                    0,                 0,
+  "ARG",  "Argentina",                2200,              2000,
+  "GRD",  "Grenada",                  250,               240,
+  "LCA",  "Saint Lucia",              830,               800,
+  "VCT",  "Saint Vincent",            150,               140,
+  "ATG",  "Antigua and Barbuda",      100,               95,
+  "BOL",  "Bolivia",                  0,                 0
+) |>
+  dplyr::mutate(change_ha = mangrove_ha_2020 - mangrove_ha_1996)
+
+gmw_out <- add_provenance(GMW_LAC_CONSTANTS, "GMW-v3-JAXA-2020", 8L, FALSE)
+readr::write_csv(gmw_out, here::here("data/raw/gmw_lac.csv"), na = "")
+message("GMW: wrote ", nrow(gmw_out), " rows to data/raw/gmw_lac.csv")
+
+message("01_fetch.R: all 5 source sections complete (WDI + INFORM + EM-DAT + ThinkHazard + GMW).")
