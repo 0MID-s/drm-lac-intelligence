@@ -29,11 +29,13 @@ To render the intelligence report:
 quarto render report/drm_intelligence_report.qmd
 ```
 
-To run the Shiny dashboard (if included):
+To launch the stub Shiny dashboard (Phase 5 will expand this):
 
 ```
 Rscript dashboard/app.R
 ```
+
+> The primary interactive interface is the OJS explorer embedded in the rendered report — no R server required, runs in any browser.
 
 ## Quarto CLI Version
 
