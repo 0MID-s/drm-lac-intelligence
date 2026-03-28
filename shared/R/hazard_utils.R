@@ -131,3 +131,32 @@ compute_composite_index <- function(layers, weights) {
     )
   )
 }
+
+# ---------------------------------------------------------------------------
+# geo_mean_weighted
+# ---------------------------------------------------------------------------
+
+#' Compute weighted geometric mean across named columns of a data frame
+#'
+#' Tabular companion to \code{compute_composite_index()} for data frame
+#' workflows (no SpatRaster required). Applies an epsilon floor before log
+#' transformation to prevent \code{-Inf} from zero values.
+#'
+#' @param df      Data frame with one row per country.
+#' @param cols    Character vector of column names (values normalised to [0, 1]).
+#' @param weights Named numeric vector; names must match \code{cols}; sum to 1.
+#' @return Numeric vector of length \code{nrow(df)}.
+geo_mean_weighted <- function(df, cols, weights) {
+  if (!all(cols %in% names(df))) {
+    stop("geo_mean_weighted: cols not found in df: ",
+         paste(setdiff(cols, names(df)), collapse = ", "))
+  }
+  if (!setequal(names(weights), cols)) {
+    stop("geo_mean_weighted: weight names must match cols exactly")
+  }
+  eps <- 1e-6
+  mat         <- as.matrix(df[, cols, drop = FALSE]) + eps
+  log_mat     <- log(mat)
+  w_aligned   <- weights[cols]
+  drop(log_mat %*% w_aligned) |> exp()
+}
