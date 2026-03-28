@@ -1,0 +1,28 @@
+iso3,country,inform_risk_score,sids_reliability_flag,data_source,reliability_flag,is_synthetic
+ARG,Argentina,3.4,FALSE,INFORM-synthetic,4,TRUE
+BOL,Bolivia,5.6,FALSE,INFORM-synthetic,4,TRUE
+BRA,Brazil,4.3,FALSE,INFORM-synthetic,4,TRUE
+CHL,Chile,3.9,FALSE,INFORM-synthetic,4,TRUE
+COL,Colombia,5.7,FALSE,INFORM-synthetic,4,TRUE
+ECU,Ecuador,5.2,FALSE,INFORM-synthetic,4,TRUE
+GUY,Guyana,4.5,FALSE,INFORM-synthetic,4,TRUE
+PER,Peru,5.5,FALSE,INFORM-synthetic,4,TRUE
+SUR,Suriname,4.1,FALSE,INFORM-synthetic,4,TRUE
+VEN,Venezuela,6.1,FALSE,INFORM-synthetic,4,TRUE
+BLZ,Belize,4.8,FALSE,INFORM-synthetic,4,TRUE
+CRI,Costa Rica,4.1,FALSE,INFORM-synthetic,4,TRUE
+GTM,Guatemala,6.2,FALSE,INFORM-synthetic,4,TRUE
+HND,Honduras,6.4,FALSE,INFORM-synthetic,4,TRUE
+MEX,Mexico,5.8,FALSE,INFORM-synthetic,4,TRUE
+NIC,Nicaragua,6.1,FALSE,INFORM-synthetic,4,TRUE
+PAN,Panama,4,FALSE,INFORM-synthetic,4,TRUE
+SLV,El Salvador,5.9,FALSE,INFORM-synthetic,4,TRUE
+ATG,Antigua and Barbuda,4.2,FALSE,INFORM-synthetic,4,TRUE
+BRB,Barbados,3.1,FALSE,INFORM-synthetic,4,TRUE
+DOM,Dominican Republic,5.4,TRUE,INFORM-synthetic,4,TRUE
+GRD,Grenada,4,FALSE,INFORM-synthetic,4,TRUE
+HTI,Haiti,8.5,TRUE,INFORM-synthetic,4,TRUE
+JAM,Jamaica,5.2,TRUE,INFORM-synthetic,4,TRUE
+LCA,Saint Lucia,4.6,FALSE,INFORM-synthetic,4,TRUE
+TTO,Trinidad and Tobago,3.7,FALSE,INFORM-synthetic,4,TRUE
+VCT,Saint Vincent,4.8,FALSE,INFORM-synthetic,4,TRUE
