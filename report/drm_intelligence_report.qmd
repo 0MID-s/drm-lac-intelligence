@@ -34,6 +34,18 @@ n_high_risk        <- sum(scores[[scenario_col]] >= 0.6, na.rm = TRUE)
 pct_high_risk      <- round(mean(scores[[scenario_col]] >= 0.6, na.rm = TRUE) * 100, 0)
 reg_protection_gap <- round(mean(scores$protection_gap, na.rm = TRUE) * 100, 0)
 n_priority_ews     <- sum(scores$ews_gap_tier %in% c("High", "Critical"), na.rm = TRUE)
+
+# Pass all scenario × year combinations to OJS for interactive explorer
+scenarios_long <- scores |>
+  dplyr::select(
+    country, iso3,
+    dplyr::starts_with("composite_"),
+    ews_gap_tier, nbs_flag,
+    protection_gap
+  ) |>
+  dplyr::mutate(protection_gap_pct = round(protection_gap * 100, 1))
+
+ojs_define(scores_ojs = scenarios_long)
 ```
 
 # Executive Summary
@@ -68,6 +80,52 @@ This report presents a multi-hazard DRM intelligence assessment for `r n_countri
 - **`r n_priority_ews` countries** are flagged as priority EWS investment targets (high hazard, low readiness)
 
 Haiti and Guatemala lead the extreme-risk band, driven by overlapping seismic, flood, and cyclone exposure compounded by low institutional adaptive capacity. Caribbean SIDS face disproportionate cyclone risk relative to their fiscal space for recovery. Full methodology is documented in [Section 10: Appendix](#appendix-methodology-and-data-coverage).
+
+## Interactive Scenario Explorer
+
+Use the selectors below to explore how composite risk rankings shift across climate scenarios and time horizons. The charts in subsequent sections are rendered for the default scenario (`r params$scenario`, `r params$year`).
+
+```{ojs}
+//| echo: false
+viewof scenario_sel = Inputs.select(
+  ["baseline", "rcp45", "rcp85"],
+  {label: "Scenario", value: "baseline", format: d => ({baseline: "Baseline (2024 calibration)", rcp45: "RCP 4.5 (moderate warming)", rcp85: "RCP 8.5 (high warming)"})[d]}
+)
+
+viewof year_sel = Inputs.select(
+  [2024, 2030, 2050],
+  {label: "Year", value: 2024}
+)
+```
+
+```{ojs}
+//| echo: false
+data = transpose(scores_ojs)
+
+col = `composite_${scenario_sel}_${year_sel}`
+
+ranked = data
+  .filter(d => d[col] != null)
+  .map(d => ({
+    Country:            d.country,
+    "Composite Score":  d[col].toFixed(3),
+    "Risk Tier":        d[col] >= 0.75 ? "Critical" : d[col] >= 0.60 ? "High" : d[col] >= 0.40 ? "Medium" : "Low",
+    "EWS Gap":          d.ews_gap_tier,
+    "NbS Flag":         d.nbs_flag,
+    "Protection Gap %": d.protection_gap_pct
+  }))
+  .sort((a, b) => b["Composite Score"] - a["Composite Score"])
+
+n_high_ojs  = ranked.filter(d => parseFloat(d["Composite Score"]) >= 0.60).length
+pct_high_ojs = Math.round(n_high_ojs / ranked.length * 100)
+
+md`**${scenario_sel} · ${year_sel}** — **${n_high_ojs} of ${ranked.length} countries** (${pct_high_ojs}%) in the high-to-critical risk band`
+
+Inputs.table(ranked, {
+  rows: 27,
+  layout: "fixed"
+})
+```
 
 # Methodology and Data Sources
 
@@ -205,7 +263,6 @@ n_priority <- sum(scores[[scenario_col]] >= 0.6 & scores$ews_gap_tier %in% c("Hi
 3. **NbS technical assistance** for the `r n_nbs_priority` countries classified as NbS Primary — prioritising mangrove restoration and green infrastructure over structural engineering where lifecycle cost analysis supports substitution
 4. **EWS investment** for the `r n_priority_ews` countries with High/Critical EWS gaps — focusing on multi-channel dissemination and community preparedness to close the hazard-readiness gap
 
-Re-render this report for alternative scenarios: `quarto render report/drm_intelligence_report.qmd -P scenario:rcp85 -P year:2050`
 
 # Appendix: Methodology and Data Coverage {#appendix-methodology-and-data-coverage}
 

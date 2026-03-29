@@ -122,8 +122,8 @@ theme_drm_polar <- function(base_size = 11, base_family = "sans") {
       panel.grid.major.y = element_line(colour = "#D0D9E0", linewidth = 0.3,
                                         linetype = "solid"),
 
-      # Remove axis text for cleaner circular appearance
-      axis.text.x        = element_blank(),
+      # Show dimension labels around the perimeter; hide radial value labels
+      axis.text.x        = element_text(size = 9, colour = "#4A5568"),
       axis.text.y        = element_blank(),
       axis.title.x       = element_blank(),
       axis.title.y       = element_blank(),
