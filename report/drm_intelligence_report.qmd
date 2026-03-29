@@ -18,6 +18,7 @@ format:
 library(here)
 library(readr)
 library(dplyr)
+library(plotly)
 here::i_am("drm-lac-intelligence.Rproj")
 source(here::here("shared/R/viz_utils.R"))
 source(here::here("R/03_visualise.R"))
@@ -141,7 +142,10 @@ This section presents the multi-hazard composite index for `r n_countries` LAC c
 #| fig-cap: "Multi-Hazard Composite Risk Index — LAC Region. Source: INFORM Risk Index, ThinkHazard API."
 #| fig-width: 9
 #| fig-height: 6
-plot_choropleth_drm(scores, scenario = params$scenario, year = params$year)
+plotly::ggplotly(
+  plot_choropleth_drm(scores, scenario = params$scenario, year = params$year),
+  tooltip = "text"
+)
 ```
 
 ```{r}
@@ -150,7 +154,7 @@ plot_choropleth_drm(scores, scenario = params$scenario, year = params$year)
 #| fig-cap: "Hazard Composition by Country — five hazard type contributions to composite index."
 #| fig-width: 9
 #| fig-height: 7
-plot_hazard_stacked_drm(scores)
+plotly::ggplotly(plot_hazard_stacked_drm(scores), tooltip = "text")
 ```
 
 # Exposure and Vulnerability
@@ -163,7 +167,10 @@ Exposure is quantified using GDP exposure, population in hazard zones (INFORM Ex
 #| fig-cap: "Risk Matrix: Hazard × Vulnerability. Bubble size = Exposure Index. Colour = sub-region."
 #| fig-width: 9
 #| fig-height: 7
-plot_risk_matrix_drm(scores, scenario = params$scenario, year = params$year)
+plotly::ggplotly(
+  plot_risk_matrix_drm(scores, scenario = params$scenario, year = params$year),
+  tooltip = "text"
+)
 ```
 
 ```{r}
@@ -177,7 +184,7 @@ top_countries <- scores |>
   dplyr::arrange(desc(.data[[scenario_col]])) |>
   dplyr::slice_head(n = 4) |>
   dplyr::pull(country)
-plot_radar_drm(scores, countries = top_countries)
+plotly::ggplotly(plot_radar_drm(scores, countries = top_countries), tooltip = "text")
 ```
 
 # Early Warning Systems Readiness
@@ -190,7 +197,7 @@ EWS readiness is scored across four Sendai Target G dimensions: (1) monitoring c
 #| fig-cap: "EWS Readiness Gap: distance between hazard exposure and EWS readiness score per country."
 #| fig-width: 9
 #| fig-height: 7
-plot_ews_dumbbell_drm(scores)
+plotly::ggplotly(plot_ews_dumbbell_drm(scores), tooltip = "text")
 ```
 
 # Nature-based Solutions
@@ -232,7 +239,7 @@ The Recovery Readiness Index synthesises: insurance penetration rate (Swiss Re s
 #| fig-cap: "Protection Gap Projection under three climate scenarios (2024–2050). Multiplier methodology in Appendix."
 #| fig-width: 9
 #| fig-height: 7
-plot_protection_gap_drm(scores)
+plotly::ggplotly(plot_protection_gap_drm(scores), tooltip = "text")
 ```
 
 # Sendai Framework Alignment
@@ -245,7 +252,7 @@ All analytical outputs are mapped to Sendai Framework for DRR 2015–2030 Target
 #| fig-cap: "Sendai Framework Alignment — Targets E & G reporting status per country. Source: UNDRR Sendai Monitor."
 #| fig-width: 7
 #| fig-height: 8
-plot_sendai_heatmap_drm(scores)
+plotly::ggplotly(plot_sendai_heatmap_drm(scores), tooltip = "text")
 ```
 
 # Conclusions and Recommendations

@@ -58,8 +58,13 @@ plot_choropleth_drm <- function(scores_df, scenario = "baseline", year = 2024) {
     )
 
   ggplot2::ggplot(map_data) +
-    ggplot2::geom_sf(ggplot2::aes(fill = .data[[col]]),
-                     colour = "white", linewidth = 0.15) +
+    ggplot2::geom_sf(
+      ggplot2::aes(
+        fill = .data[[col]],
+        text = paste0(name, "\nRisk Score: ", round(.data[[col]], 3))
+      ),
+      colour = "white", linewidth = 0.15
+    ) +
     ggplot2::scale_fill_gradientn(
       colours  = c(DRM_COLOURS$accent, DRM_COLOURS$warning, DRM_COLOURS$danger),
       na.value = "#E8E8E8",
@@ -110,7 +115,12 @@ plot_risk_matrix_drm <- function(scores_df, scenario = "baseline", year = 2024) 
       y      = vulnerability_score,
       size   = exposure_score,
       colour = sub_region,
-      label  = iso3
+      label  = iso3,
+      text   = paste0(country, " (", iso3, ")",
+                      "\nHazard: ",       round(hazard_composite, 3),
+                      "\nVulnerability: ", round(vulnerability_score, 3),
+                      "\nExposure: ",      round(exposure_score, 3),
+                      "\nSub-region: ",    sub_region)
     )
   ) +
     ggplot2::geom_point(alpha = 0.75) +
@@ -187,7 +197,13 @@ plot_radar_drm <- function(scores_df, countries = NULL) {
 
   ggplot2::ggplot(
     long_closed,
-    ggplot2::aes(x = dimension, y = value, group = country, colour = country)
+    ggplot2::aes(
+      x      = dimension,
+      y      = value,
+      group  = country,
+      colour = country,
+      text   = paste0(country, "\n", dimension, ": ", round(value, 3))
+    )
   ) +
     ggplot2::geom_polygon(fill = NA, linewidth = 0.8) +
     ggplot2::coord_polar() +
@@ -248,7 +264,12 @@ plot_hazard_stacked_drm <- function(scores_df) {
 
   ggplot2::ggplot(
     hazard_long,
-    ggplot2::aes(x = score, y = country, fill = hazard_type)
+    ggplot2::aes(
+      x    = score,
+      y    = country,
+      fill = hazard_type,
+      text = paste0(country, "\n", hazard_type, ": ", round(score, 3))
+    )
   ) +
     ggplot2::geom_col(position = "stack") +
     ggplot2::scale_fill_manual(values = hazard_colours, name = "Hazard Type") +
@@ -296,12 +317,22 @@ plot_ews_dumbbell_drm <- function(scores_df) {
       linewidth = 1
     ) +
     ggplot2::geom_point(
-      ggplot2::aes(x = hazard_composite, y = country),
+      ggplot2::aes(
+        x    = hazard_composite,
+        y    = country,
+        text = paste0(country, "\nHazard: ", round(hazard_composite, 3),
+                      "\nEWS Gap: ", round(ews_gap, 3))
+      ),
       colour = DRM_COLOURS$danger,
       size   = 3
     ) +
     ggplot2::geom_point(
-      ggplot2::aes(x = ews_readiness_score, y = country),
+      ggplot2::aes(
+        x    = ews_readiness_score,
+        y    = country,
+        text = paste0(country, "\nEWS Readiness: ", round(ews_readiness_score, 3),
+                      "\nEWS Gap: ", round(ews_gap, 3))
+      ),
       colour = DRM_COLOURS$accent,
       size   = 3
     ) +
@@ -411,7 +442,13 @@ plot_sendai_heatmap_drm <- function(scores_df) {
     )
 
   ggplot2::ggplot(long, ggplot2::aes(x = target, y = country, fill = status)) +
-    ggplot2::geom_tile(colour = "white", linewidth = 0.4) +
+    ggplot2::geom_tile(
+      ggplot2::aes(
+        text = paste0(country, "\n", gsub("\n", " ", as.character(target)),
+                      ": ", status)
+      ),
+      colour = "white", linewidth = 0.4
+    ) +
     ggplot2::scale_fill_manual(
       values = c(
         "Reported"     = unname(RISK_PALETTE["low"]),
@@ -493,7 +530,10 @@ plot_protection_gap_drm <- function(scores_df, top_n = 15) {
       y        = projected_gap,
       colour   = country,
       linetype = scenario,
-      group    = interaction(country, scenario)
+      group    = interaction(country, scenario),
+      text     = paste0(country, "\nScenario: ", scenario,
+                        "\nYear: ", year,
+                        "\nGap: ", round(projected_gap * 100, 1), "%")
     )
   ) +
     ggplot2::geom_line(linewidth = 0.7) +
