@@ -537,11 +537,13 @@ plot_protection_gap_drm <- function(scores_df, top_n = 15) {
     )
   ) +
     ggplot2::geom_line(linewidth = 0.7) +
+    ggplot2::geom_point(size = 2.5, alpha = 0.85) +
     ggplot2::scale_x_continuous(breaks = c(2024, 2030, 2050)) +
     ggplot2::scale_y_continuous(labels = scales::label_percent(accuracy = 1)) +
-    ggplot2::scale_colour_viridis_d(name = "Country", option = "turbo") +
+    ggplot2::scale_colour_viridis_d(name = "Country", option = "turbo", guide = "none") +
     ggplot2::scale_linetype_manual(
       values = c("baseline" = "solid", "rcp45" = "dashed", "rcp85" = "dotted"),
+      labels = c("baseline" = "Baseline", "rcp45" = "RCP 4.5", "rcp85" = "RCP 8.5"),
       name   = "Scenario"
     ) +
     ggplot2::labs(

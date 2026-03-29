@@ -239,8 +239,26 @@ The Recovery Readiness Index synthesises: insurance penetration rate (Swiss Re s
 #| fig-cap: "Protection Gap Projection under three climate scenarios (2024–2050). Multiplier methodology in Appendix."
 #| fig-width: 9
 #| fig-height: 7
-plotly::ggplotly(plot_protection_gap_drm(scores), tooltip = "text") |>
-  plotly::layout(showlegend = FALSE)
+local({
+  p <- plotly::ggplotly(plot_protection_gap_drm(scores), tooltip = "text")
+  # Collapse legend to one entry per scenario (3 items) — plotly creates one
+  # trace per country×scenario, which produces a 45-item legend by default.
+  seen <- character(0)
+  for (i in seq_along(p$x$data)) {
+    nm       <- p$x$data[[i]]$name %||% ""
+    scenario <- sub(".*,([^,)]+)\\).*", "\\1", nm)
+    if (scenario %in% seen) {
+      p$x$data[[i]]$showlegend <- FALSE
+    } else {
+      seen                  <- c(seen, scenario)
+      p$x$data[[i]]$name    <- c("baseline" = "Baseline",
+                                  "rcp45"    = "RCP 4.5",
+                                  "rcp85"    = "RCP 8.5")[scenario] %||% scenario
+      p$x$data[[i]]$showlegend <- TRUE
+    }
+  }
+  p
+})
 ```
 
 # Sendai Framework Alignment
