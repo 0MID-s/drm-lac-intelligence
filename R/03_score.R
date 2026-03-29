@@ -476,8 +476,138 @@ score_recovery <- function(lac) {
   lac
 }
 
-score_sendai       <- function(lac) { message("score_sendai: stub"); lac }
-assemble_outputs   <- function(lac) { message("assemble_outputs: stub"); lac }
+# ============================================================
+# MODULE 8: SENDAI FRAMEWORK SCORECARD (SENDAI-01, SENDAI-02)
+# ============================================================
+
+#' Compute Sendai Target E and G ordinal scores per country
+#'
+#' Targets E and G are QUALITATIVE — not continuous scores.
+#' Output values must be exactly: "Reported", "Partial", "Not Reported"
+#' These become factor levels in Phase 4 Sendai heatmap visualisation.
+#'
+#' Target E: National/local DRR strategies by 2020 (Sendai Framework)
+#' Target G: Multi-hazard EWS (substantially increased access by 2030)
+#'
+#' @param lac Data frame from lac_master.csv
+#' @return lac with sendai_target_e and sendai_target_g character columns
+score_sendai <- function(lac) {
+  # Target E: National DRR strategy adoption
+  # Reported = has confirmed national DRR strategy (proxy: good governance)
+  lac$sendai_target_e <- dplyr::case_when(
+    lac$gov_eff >  0.0                                       ~ "Reported",
+    lac$gov_eff > -0.5 & lac$inform_risk_score < 6.0        ~ "Partial",
+    TRUE                                                      ~ "Not Reported"
+  )
+
+  # Target G: Multi-hazard early warning systems
+  # Same governance proxies; slightly stricter threshold (EWS requires more capacity)
+  lac$sendai_target_g <- dplyr::case_when(
+    lac$gov_eff >  0.2                                       ~ "Reported",
+    lac$gov_eff > -0.3 & lac$inform_risk_score < 5.5        ~ "Partial",
+    TRUE                                                      ~ "Not Reported"
+  )
+
+  # Ensure character type (defensive guard against factor coercion)
+  lac$sendai_target_e <- as.character(lac$sendai_target_e)
+  lac$sendai_target_g <- as.character(lac$sendai_target_g)
+
+  message("score_sendai: Target E — ",
+          sum(lac$sendai_target_e == "Reported"), " Reported, ",
+          sum(lac$sendai_target_e == "Partial"), " Partial, ",
+          sum(lac$sendai_target_e == "Not Reported"), " Not Reported")
+  lac
+}
+
+# ============================================================
+# SCENARIO EXPANSION AND OUTPUT ASSEMBLY (EXP-03, SENDAI-01)
+# ============================================================
+
+#' Scenario multiplier table
+#' Source: IPCC AR6 Chapter 12 (Central and South America) regional projections
+#' hazard_mult and exposure_mult applied to base_composite = H × E × V product
+SCENARIO_MULTIPLIERS <- tibble::tribble(
+  ~scenario,   ~year, ~hazard_mult, ~exposure_mult,
+  "baseline",  2024,  1.00,         1.00,
+  "baseline",  2030,  1.00,         1.00,
+  "baseline",  2050,  1.00,         1.00,
+  "rcp45",     2024,  1.00,         1.00,
+  "rcp45",     2030,  1.05,         1.03,
+  "rcp45",     2050,  1.12,         1.08,
+  "rcp85",     2024,  1.00,         1.00,
+  "rcp85",     2030,  1.08,         1.05,
+  "rcp85",     2050,  1.22,         1.15
+)
+
+#' Assemble final outputs: scenario expansion → write both CSVs
+#'
+#' Writes:
+#'   - data/processed/scores_intermediate.csv: all module scores + composite columns
+#'   - data/processed/country_scores.csv: exactly 12 locked columns (FOUND-04)
+#'
+#' @param lac Data frame after all scoring modules have been applied
+#' @return lac invisibly
+assemble_outputs <- function(lac) {
+  # ---- Base composite risk score: Hazard × Exposure × Vulnerability ----
+  required_cols <- c("hazard_composite", "exposure_score", "vulnerability_score")
+  missing <- setdiff(required_cols, names(lac))
+  if (length(missing) > 0) {
+    stop("assemble_outputs: missing required columns: ", paste(missing, collapse = ", "))
+  }
+
+  base_composite <- lac$hazard_composite * lac$exposure_score * lac$vulnerability_score
+  # Renormalise to [0,1] using percentile (avoids triple-multiplication compression)
+  lac$base_composite <- normalise_to_01(base_composite, method = "percentile")
+
+  # ---- Apply scenario multipliers ----
+  for (i in seq_len(nrow(SCENARIO_MULTIPLIERS))) {
+    scen     <- SCENARIO_MULTIPLIERS$scenario[i]
+    yr       <- SCENARIO_MULTIPLIERS$year[i]
+    hm       <- SCENARIO_MULTIPLIERS$hazard_mult[i]
+    em       <- SCENARIO_MULTIPLIERS$exposure_mult[i]
+    col_name <- paste0("composite_", scen, "_", yr)
+    lac[[col_name]] <- pmin(lac$base_composite * hm * em, 1.0)
+  }
+
+  # ---- Write scores_intermediate.csv (all columns for Phase 4 charts) ----
+  readr::write_csv(lac, here::here("data/processed/scores_intermediate.csv"))
+  message("assemble_outputs: wrote scores_intermediate.csv (",
+          nrow(lac), " rows, ", ncol(lac), " columns)")
+
+  # ---- Write country_scores.csv (exactly 12 locked columns — FOUND-04) ----
+  cols_12 <- c(
+    "country", "iso3", "sub_region",
+    "composite_baseline_2024", "composite_baseline_2030", "composite_baseline_2050",
+    "composite_rcp45_2024",    "composite_rcp45_2030",    "composite_rcp45_2050",
+    "composite_rcp85_2024",    "composite_rcp85_2030",    "composite_rcp85_2050"
+  )
+  missing_12 <- setdiff(cols_12, names(lac))
+  if (length(missing_12) > 0) {
+    stop("assemble_outputs: missing columns for country_scores.csv: ",
+         paste(missing_12, collapse = ", "))
+  }
+
+  country_scores_out <- lac[, cols_12]
+  # FOUND-04 schema uses 'region' not 'sub_region'
+  names(country_scores_out)[names(country_scores_out) == "sub_region"] <- "region"
+
+  # Final NA check
+  composite_cols <- grep("^composite_", names(country_scores_out), value = TRUE)
+  na_counts <- vapply(country_scores_out[, composite_cols],
+                      function(x) sum(is.na(x)), integer(1L))
+  if (any(na_counts > 0)) {
+    stop("assemble_outputs: NA values found in composite columns: ",
+         paste(names(na_counts[na_counts > 0]), collapse = ", "))
+  }
+
+  readr::write_csv(country_scores_out, here::here("data/processed/country_scores.csv"))
+  message("assemble_outputs: wrote country_scores.csv (12 columns, ",
+          nrow(country_scores_out), " rows)")
+  message("Haiti RCP8.5 2050: ",
+          round(country_scores_out$composite_rcp85_2050[country_scores_out$iso3 == "HTI"], 3))
+
+  invisible(lac)
+}
 
 # ============================================================
 # MAIN PIPELINE (run when sourced directly)
