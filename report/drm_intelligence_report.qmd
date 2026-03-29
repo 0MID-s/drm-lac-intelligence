@@ -184,7 +184,7 @@ top_countries <- scores |>
   dplyr::arrange(desc(.data[[scenario_col]])) |>
   dplyr::slice_head(n = 4) |>
   dplyr::pull(country)
-plotly::ggplotly(plot_radar_drm(scores, countries = top_countries), tooltip = "text")
+plot_radar_drm(scores, countries = top_countries)
 ```
 
 # Early Warning Systems Readiness
