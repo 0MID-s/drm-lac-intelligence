@@ -1,6 +1,8 @@
 /* DRM Intelligence Report — LAC Region */
 /* Custom overrides for Quarto flatly theme */
 
+/*-- scss:rules --*/
+
 :root {
   --drm-primary: #1B4F72;
   --drm-accent:  #2E86AB;

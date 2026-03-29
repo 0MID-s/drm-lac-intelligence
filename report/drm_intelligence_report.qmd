@@ -18,7 +18,6 @@ format:
 library(here)
 library(readr)
 library(dplyr)
-library(gt)
 here::i_am("drm-lac-intelligence.Rproj")
 source(here::here("shared/R/viz_utils.R"))
 source(here::here("R/03_visualise.R"))
@@ -219,15 +218,11 @@ Re-render this report for alternative scenarios: `quarto render report/drm_intel
 tibble::tibble(
   Source = c("INFORM Risk Index", "World Bank WDI", "EM-DAT", "ThinkHazard API", "Global Mangrove Watch"),
   Coverage = c("27 LAC countries", "27 LAC countries", "LAC region aggregates", "27 LAC countries (synthetic fallback)", "27 LAC countries"),
-  `Reliability` = c("High", "High", "High", "Medium (synthetic baseline)", "High"),
-  `Phase` = c("2", "2", "2", "2", "2"),
-  `Caveats` = c("2024 version", "Latest available year varies by indicator", "Published loss summaries only; detailed event data requires registration", "API structural mismatch resolved via synthetic; live path returns 0 results", "Area data; coastline normalisation applied")
+  Reliability = c("High", "High", "High", "Medium (synthetic baseline)", "High"),
+  Phase = c("2", "2", "2", "2", "2"),
+  Caveats = c("2024 version", "Latest available year varies by indicator", "Published loss summaries only; detailed event data requires registration", "API structural mismatch resolved via synthetic; live path returns 0 results", "Area data; coastline normalisation applied")
 ) |>
-  gt::gt() |>
-  gt::tab_style(
-    style     = gt::cell_fill(color = "#F5F5F5"),
-    locations = gt::cells_column_labels()
-  )
+  knitr::kable(format = "html", escape = FALSE)
 ```
 
 ## Composite Index Methodology
