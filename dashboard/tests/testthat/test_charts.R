@@ -14,9 +14,12 @@ scores <- tryCatch(
 )
 
 # Source app.R to bring chart helper functions into scope.
-# If app.R cannot be sourced, tests will fail with an informative error.
+# chdir = TRUE ensures app.R's relative paths (e.g. "data/scores_intermediate.csv")
+# resolve correctly from dashboard/ rather than the test directory.
+# shiny.testmode suppresses the shinyApp() call at the bottom of app.R.
+options(shiny.testmode = TRUE)
 tryCatch(
-  source(app_r_path),
+  source(app_r_path, chdir = TRUE),
   error = function(e) {
     message("Could not source dashboard/app.R: ", conditionMessage(e))
   }
