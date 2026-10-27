@@ -108,24 +108,23 @@ col = `composite_${scenario_sel}_${year_sel}`
 ranked = data
   .filter(d => d[col] != null)
   .map(d => ({
-    Country:            d.country,
-    "Composite Score":  d[col].toFixed(3),
-    "Risk Tier":        d[col] >= 0.75 ? "Critical" : d[col] >= 0.60 ? "High" : d[col] >= 0.40 ? "Medium" : "Low",
-    "EWS Gap":          d.ews_gap_tier,
-    "NbS Flag":         d.nbs_flag,
-    "Protection Gap %": d.protection_gap_pct
+    "Country":            d.country,
+    "Risk Score":         d[col].toFixed(3),
+    "Risk Level":         d[col] >= 0.75 ? "Critical" : d[col] >= 0.60 ? "High" : d[col] >= 0.40 ? "Medium" : "Low",
+    "EWS Gap":            d.ews_gap_tier,
+    "NbS Strategy":       d.nbs_flag,
+    "Protection Gap (%)": d.protection_gap_pct
   }))
-  .sort((a, b) => b["Composite Score"] - a["Composite Score"])
+  .sort((a, b) => b["Risk Score"] - a["Risk Score"])
 
-n_high_ojs  = ranked.filter(d => parseFloat(d["Composite Score"]) >= 0.60).length
+n_high_ojs  = ranked.filter(d => parseFloat(d["Risk Score"]) >= 0.60).length
 pct_high_ojs = Math.round(n_high_ojs / ranked.length * 100)
 
 md`**${scenario_sel} · ${year_sel}** — **${n_high_ojs} of ${ranked.length} countries** (${pct_high_ojs}%) in the high-to-critical risk band`
 
-Inputs.table(ranked, {
-  rows: 27,
-  layout: "fixed"
-})
+Inputs.table(ranked, {rows: 27, layout: "fixed"})
+
+md`<small style="color:#666">Risk Score: 0–1 scale · Critical ≥ 0.75 · High 0.60–0.74 · Medium 0.40–0.59 · Low < 0.40</small>`
 ```
 
 # Methodology and Data Sources
