@@ -4,6 +4,7 @@ An independent multi-hazard disaster risk management intelligence assessment cov
 
 The platform produces:
 - A parameterised Quarto intelligence report (self-contained HTML, no server required)
+- A Shiny dashboard with linked choropleth → risk matrix → radar views and scenario/year controls
 - A Recovery Readiness Index — an original composite indicator bridging insurance penetration, fiscal space, social protection coverage, and DRM legal framework maturity
 - A protection gap quantification anchored to Swiss Re sigma regional estimates (~81% for LAC)
 - A Sendai Framework alignment scorecard mapping all outputs to Targets A–G
@@ -28,7 +29,7 @@ The platform produces:
 
 ## Rendering
 
-Requires: R ≥ 4.3, Quarto CLI ≥ 1.4 (version pinned in this README), renv.
+Requires: R ≥ 4.3, Quarto CLI ≥ 1.4, renv.
 
 **Install dependencies (first time):**
 ```r
@@ -50,7 +51,16 @@ Valid year values: `2024`, `2030`, `2050`
 
 Always render from the project root directory. Do not `cd report/` before rendering.
 
-**Quarto CLI version:** 1.4.x (tested with 1.4.550)
+**Run the interactive dashboard:**
+```r
+shiny::runApp("dashboard")
+```
+
+**Run the test suite:**
+```r
+source("shared/tests/run_tests.R")
+testthat::test_dir("dashboard/tests/testthat")
+```
 
 ---
 
@@ -84,6 +94,11 @@ data/
 report/
 ├── drm_intelligence_report.qmd  # Parameterised Quarto report
 └── styles.css                   # Custom IDB-style CSS
+
+dashboard/
+├── app.R                # Shiny app (leaflet choropleth, risk matrix, radar)
+├── data/                # Self-contained data copy for shinyapps.io bundling
+└── tests/               # testthat tests for data load, charts, deploy readiness
 
 shared/
 ├── R/                   # Shared utilities (utils.R, viz_utils.R, hazard_utils.R, ...)

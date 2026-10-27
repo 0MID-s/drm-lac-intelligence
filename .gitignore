@@ -1,0 +1,24 @@
+# R / RStudio
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.Renviron
+
+# Quarto build artefacts
+/.quarto/
+**/*.quarto_ipynb
+report/*.html
+report/*_files/
+
+# Shiny deployment credentials/metadata
+rsconnect/
+dashboard/rsconnect/
+
+# Internal planning notes (not part of the deliverable)
+.planning/
+.claude/
+
+# OS / editor
+.DS_Store
+.env
