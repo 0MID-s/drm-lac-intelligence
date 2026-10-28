@@ -52,7 +52,7 @@ ojs_define(scores_ojs = scenarios_long)
 # Executive Summary
 
 ::: {.callout-note appearance="simple"}
-## Skills Demonstrated
+## Methods & Tools
 
 **Multi-Hazard Assessment:** Geometric mean composite index across 5 hazard types; percentile normalisation; sensitivity analysis with ±20% weight variation (rank correlation > 0.90)
 
@@ -64,7 +64,7 @@ ojs_define(scores_ojs = scenarios_long)
 
 **Recovery Readiness Index:** Insurance penetration, social protection coverage, IMF fiscal space, DRM legal framework — original composite index
 
-**Protection Gap Analysis:** LAC regional gap ~81% anchored to Swiss Re sigma estimates; parametric/CCRIF instrument linkage; bridges insurance CV expertise to DRM framing
+**Protection Gap Analysis:** LAC regional gap ~81% anchored to Swiss Re sigma estimates; parametric/CCRIF instrument linkage; links risk transfer instruments to DRM investment planning
 
 **Sendai Framework:** All outputs mapped to Targets A–G; qualitative scorecard for Targets E and G
 

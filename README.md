@@ -11,7 +11,7 @@ The platform produces:
 
 ---
 
-## Skills Demonstrated
+## Methods & Approach
 
 - Constructed a geometric mean multi-hazard composite index across five hazard types (tropical cyclone, riverine flood, seismic, volcanic, drought/ENSO) with percentile normalisation and sensitivity analysis (rank correlation > 0.90 across ±20% weight variation)
 - Implemented exposure scoring from GDP exposure, population in hazard zones, infrastructure proxies, and agricultural GDP share — per IDB HEV methodology
@@ -20,7 +20,7 @@ The platform produces:
 - Screened NbS feasibility using Global Mangrove Watch coastline-normalised coverage and watershed restoration proxies; flagged structural complements for highest-gap countries
 - Estimated structural risk reduction investment gaps anchored to EM-DAT loss records and World Bank CDRP damage ratios
 - Designed and implemented the Recovery Readiness Index — original composite integrating insurance penetration (CCRIF/Swiss Re sigma), social protection coverage, IMF fiscal space, and UNDRR DRM legal framework maturity
-- Quantified LAC regional protection gap (~81%) and connected parametric insurance instruments (CCRIF, cat bonds) to DRM investment narrative, bridging insurance/TCFD expertise to development finance framing
+- Quantified LAC regional protection gap (~81%) and connected parametric insurance instruments (CCRIF, cat bonds) to DRM investment narrative, linking insurance risk transfer to development finance
 - Mapped all outputs to Sendai Framework Targets A–G; produced qualitative scorecard for Targets E and G per UNDRR Sendai Monitor methodology
 - Rendered publication-quality parameterised Quarto report (embed-resources: true) with 8 ggplot2 visualisations using custom DRM theme; OJS interactive explorer embedded
 - Engineered full reproducible R pipeline with renv lockfile; all fetch scripts implement synthetic fallback paths; complete provenance schema with reliability flags per source
